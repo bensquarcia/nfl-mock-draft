@@ -1,4 +1,5 @@
 import { Player } from '@/types/draft';
+import Link from 'next/link';
 
 interface PlayerRowProps {
   player: Player;
@@ -16,37 +17,32 @@ export default function PlayerRow({ player, rank, onDraft, isTeamNeed = false }:
     } hover:border-blue-500/50 hover:bg-slate-800/80`}>
       
       <div className="flex items-center gap-6">
-        {/* Rank Number */}
         <span className={`text-xl font-black w-8 ${isTeamNeed ? "text-blue-400" : "text-slate-700 group-hover:text-blue-500/50"}`}>
           {rank}
         </span>
         
-        {/* White Logo Container */}
         {player.college_logo_url && (
           <div className="w-12 h-12 bg-white rounded-lg p-1.5 flex items-center justify-center shrink-0 shadow-md">
-            <img 
-              src={player.college_logo_url} 
-              alt={player.college} 
-              className="w-full h-full object-contain"
-            />
+            <img src={player.college_logo_url} alt="" className="w-full h-full object-contain" />
           </div>
         )}
         
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-lg font-bold text-slate-100 group-hover:text-blue-400">
-              {player.name}
-            </h3>
+            {/* CLICKABLE PLAYER NAME */}
+            <Link href={`/player/${player.slug || ""}`}>
+              <h3 className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors cursor-pointer decoration-blue-500/30 hover:underline">
+                {player.name}
+              </h3>
+            </Link>
             
-            {/* Team Need Badge */}
             {isTeamNeed && (
-              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500 text-[10px] font-black uppercase tracking-tighter text-white animate-pulse shadow-lg shadow-blue-500/20">
-                <span className="w-1.5 h-1.5 bg-white rounded-full"></span> Team Need
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500 text-[10px] font-black uppercase tracking-tighter text-white animate-pulse">
+                Team Need
               </span>
             )}
           </div>
           
-          {/* Details Row: Pos, College, Ht, Wt, Cls */}
           <div className="flex items-center gap-2 mt-1">
             <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">
               {player.position} <span className="mx-1 text-slate-600">|</span> {player.college}

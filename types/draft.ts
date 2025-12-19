@@ -8,6 +8,10 @@ export type Player = {
   ht?: string;
   wt?: string;
   cls?: string;
+  // --- NEW FIELDS ---
+  slug?: string;         // Unique URL-friendly name (e.g., 'travis-hunter')
+  bio?: string;          // Full scouting report text
+  comparisons?: string;  // NFL pro comparison
 };
 
 export type DraftSlot = {
@@ -21,5 +25,5 @@ export type DraftSlot = {
   current_team_name: string;
   round: number;
   needs: string[];
-  selection?: Player; // Add this to store the result
+  selection?: Player; // Stores the drafted player result
 };

@@ -31,12 +31,9 @@ export default function Home() {
 
   const startDraft = (rounds: number) => {
     setMaxRounds(rounds);
-    // Important: We don't filter the actual draftOrder array here 
-    // because we need it for lookups, but we tell the UI to stop after X rounds.
     setGameState("DRAFT");
   };
 
-  // Calculate the total number of picks allowed based on selected rounds
   const totalPicksInMode = draftOrder.filter(p => p.round <= maxRounds).length;
 
   const handleDraftPlayer = (player: Player) => {
@@ -46,7 +43,6 @@ export default function Home() {
       setDraftedPlayers(nextDrafted);
       setPlayers(players.filter(p => p.id !== player.id));
 
-      // Transition to results if finished
       if (nextDrafted.length === totalPicksInMode) {
         setTimeout(() => setGameState("RESULTS"), 800);
       }
@@ -62,29 +58,58 @@ export default function Home() {
     }
   };
 
+  /**
+   * FIXED TRADE LOGIC: 
+   * Performs a clean swap where team names AND their needs travel with the pick.
+   */
   const handleConfirmTrade = (userPicks: DraftSlot[], cpuPicks: DraftSlot[], cpuTeam: string) => {
+    // 1. Capture current team needs to ensure they follow the team
+    const userTeamNeeds = draftOrder.find(p => p.current_team_name === userTeam)?.needs || [];
+    const cpuTeamNeeds = draftOrder.find(p => p.current_team_name === cpuTeam)?.needs || [];
+
+    // 2. Map through the draft order to perform a clean swap
     const updatedOrder = draftOrder.map(pick => {
-      if (userPicks.some(p => p.slot_number === pick.slot_number)) return { ...pick, current_team_name: cpuTeam };
-      if (cpuPicks.some(p => p.slot_number === pick.slot_number)) return { ...pick, current_team_name: userTeam };
-      return pick;
+      const isUserGivingThisAway = userPicks.some(p => p.slot_number === pick.slot_number);
+      const isCpuGivingThisAway = cpuPicks.some(p => p.slot_number === pick.slot_number);
+
+      if (isUserGivingThisAway) {
+        // Reassign User's pick to CPU only
+        return { 
+          ...pick, 
+          current_team_name: cpuTeam,
+          needs: cpuTeamNeeds 
+        };
+      } 
+      
+      if (isCpuGivingThisAway) {
+        // Reassign CPU's pick to User only
+        return { 
+          ...pick, 
+          current_team_name: userTeam,
+          needs: userTeamNeeds 
+        };
+      }
+
+      return pick; // Unchanged pick
     });
+
     setDraftOrder(updatedOrder);
     setIsTradeModalOpen(false);
   };
 
-  // --- LOGIC FOR DRAFT UI ---
   const currentPick = draftOrder[draftedPlayers.length];
   const currentNeeds = (currentPick?.needs || []) as string[];
-  const positions = ["ALL", "QB", "RB", "WR", "TE", "OT", "G", "C", "EDGE", "DT", "LB", "CB", "S"];
+  
+  const positions = ["ALL", "QB", "RB", "WR", "TE", "OT", "IOL", "EDGE", "DL", "LB", "CB", "S", "K", "P", "LS"];
   const filteredPlayers = selectedPosition === "ALL" 
     ? players 
     : players.filter(p => p.position === selectedPosition);
 
-  // --- 1. START SCREEN ---
+  // START SCREEN
   if (gameState === "START") {
     return (
       <main className="h-screen bg-[#0f172a] flex items-center justify-center p-8">
-        <div className="max-w-md w-full text-center space-y-8 bg-slate-900/50 p-10 rounded-3xl border border-slate-800 shadow-2xl backdrop-blur-xl">
+        <div className="max-w-md w-full text-center space-y-8 bg-slate-900/50 p-10 rounded-3xl border border-slate-800 shadow-2xl backdrop-blur-xl text-white">
           <h1 className="text-5xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600">
             Mock Draft <span className="text-white/20">2026</span>
           </h1>
@@ -94,7 +119,7 @@ export default function Home() {
               <button
                 key={r}
                 onClick={() => startDraft(r)}
-                className="bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-400 py-4 rounded-xl font-black text-xl transition-all active:scale-95 text-white"
+                className="bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-400 py-4 rounded-xl font-black text-xl transition-all active:scale-95"
               >
                 {r === 7 ? "Full" : r}
               </button>
@@ -106,10 +131,10 @@ export default function Home() {
     );
   }
 
-  // --- 2. RESULTS SCREEN ---
+  // RESULTS SCREEN
   if (gameState === "RESULTS") {
     return (
-      <main className="h-screen bg-[#0f172a] p-12 overflow-y-auto custom-scrollbar">
+      <main className="h-screen bg-[#0f172a] p-12 overflow-y-auto custom-scrollbar text-white">
         <div className="max-w-4xl mx-auto space-y-8">
           <header className="flex justify-between items-end border-b border-slate-800 pb-8">
             <div>
@@ -152,7 +177,7 @@ export default function Home() {
     );
   }
 
-  // --- 3. DRAFT SCREEN ---
+  // ACTIVE DRAFT SCREEN
   return (
     <main className="h-screen bg-[#0f172a] text-white p-8 flex flex-col overflow-hidden">
       <header className="max-w-7xl mx-auto w-full flex justify-between items-center mb-8 shrink-0">
