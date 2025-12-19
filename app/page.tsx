@@ -10,6 +10,7 @@ type GameState = "START" | "DRAFT" | "RESULTS";
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("START");
+  const [loading, setLoading] = useState(true); // NEW: Prevents the flash
   const [maxRounds, setMaxRounds] = useState(1);
   const [players, setPlayers] = useState<Player[]>([]);
   const [draftOrder, setDraftOrder] = useState<DraftSlot[]>([]);
@@ -19,19 +20,71 @@ export default function Home() {
   const [selectedPosition, setSelectedPosition] = useState("ALL");
   const [history, setHistory] = useState<{drafted: Player[], pool: Player[]}[]>([]);
 
+  // 1. INITIAL FETCH & RESTORE FROM LOCAL STORAGE
   useEffect(() => {
     async function fetchData() {
-      const { data: pData } = await supabase.from('players').select('*').order('id');
-      const { data: dData } = await supabase.from('draft_order').select('*').order('slot_number');
-      if (pData) setPlayers(pData);
-      if (dData) setDraftOrder(dData);
+      const { data: pData } = await supabase
+        .from('players')
+        .select('*')
+        .eq('status', 'active')
+        .order('rank', { ascending: true });
+        
+      const { data: dData } = await supabase
+        .from('draft_order')
+        .select('*')
+        .order('slot_number');
+
+      // Check if there is a saved draft in progress
+      const savedDrafted = localStorage.getItem('drafted_players');
+      const savedGameState = localStorage.getItem('game_state');
+      const savedMaxRounds = localStorage.getItem('max_rounds');
+      const savedOrder = localStorage.getItem('draft_order');
+
+      if (pData) {
+        if (savedDrafted) {
+          const draftedIds = JSON.parse(savedDrafted).map((p: Player) => p.id);
+          setPlayers(pData.filter(p => !draftedIds.includes(p.id)));
+        } else {
+          setPlayers(pData);
+        }
+      }
+
+      if (savedOrder) {
+        setDraftOrder(JSON.parse(savedOrder));
+      } else if (dData) {
+        setDraftOrder(dData);
+      }
+
+      if (savedDrafted) setDraftedPlayers(JSON.parse(savedDrafted));
+      if (savedGameState) setGameState(savedGameState as GameState);
+      if (savedMaxRounds) setMaxRounds(Number(savedMaxRounds));
+      
+      // Data is loaded and memory is checked, safe to show the UI
+      setLoading(false); 
     }
     fetchData();
   }, []);
 
+  // 2. SAVE TO LOCAL STORAGE WHENEVER STATE CHANGES
+  useEffect(() => {
+    if (gameState !== "START") {
+      localStorage.setItem('drafted_players', JSON.stringify(draftedPlayers));
+      localStorage.setItem('game_state', gameState);
+      localStorage.setItem('max_rounds', String(maxRounds));
+      localStorage.setItem('draft_order', JSON.stringify(draftOrder));
+    }
+  }, [draftedPlayers, gameState, maxRounds, draftOrder]);
+
   const startDraft = (rounds: number) => {
     setMaxRounds(rounds);
     setGameState("DRAFT");
+  };
+
+  const resetDraft = () => {
+    if (confirm("Reset current draft progress?")) {
+      localStorage.clear();
+      window.location.reload();
+    }
   };
 
   const totalPicksInMode = draftOrder.filter(p => p.round <= maxRounds).length;
@@ -58,52 +111,33 @@ export default function Home() {
     }
   };
 
-  /**
-   * FIXED TRADE LOGIC: 
-   * Performs a clean swap where team names AND their needs travel with the pick.
-   */
   const handleConfirmTrade = (userPicks: DraftSlot[], cpuPicks: DraftSlot[], cpuTeam: string) => {
-    // 1. Capture current team needs to ensure they follow the team
     const userTeamNeeds = draftOrder.find(p => p.current_team_name === userTeam)?.needs || [];
     const cpuTeamNeeds = draftOrder.find(p => p.current_team_name === cpuTeam)?.needs || [];
 
-    // 2. Map through the draft order to perform a clean swap
     const updatedOrder = draftOrder.map(pick => {
       const isUserGivingThisAway = userPicks.some(p => p.slot_number === pick.slot_number);
       const isCpuGivingThisAway = cpuPicks.some(p => p.slot_number === pick.slot_number);
-
-      if (isUserGivingThisAway) {
-        // Reassign User's pick to CPU only
-        return { 
-          ...pick, 
-          current_team_name: cpuTeam,
-          needs: cpuTeamNeeds 
-        };
-      } 
-      
-      if (isCpuGivingThisAway) {
-        // Reassign CPU's pick to User only
-        return { 
-          ...pick, 
-          current_team_name: userTeam,
-          needs: userTeamNeeds 
-        };
-      }
-
-      return pick; // Unchanged pick
+      if (isUserGivingThisAway) return { ...pick, current_team_name: cpuTeam, needs: cpuTeamNeeds };
+      if (isCpuGivingThisAway) return { ...pick, current_team_name: userTeam, needs: userTeamNeeds };
+      return pick;
     });
 
     setDraftOrder(updatedOrder);
     setIsTradeModalOpen(false);
   };
 
-  const currentPick = draftOrder[draftedPlayers.length];
-  const currentNeeds = (currentPick?.needs || []) as string[];
-  
-  const positions = ["ALL", "QB", "RB", "WR", "TE", "OT", "IOL", "EDGE", "DL", "LB", "CB", "S", "K", "P", "LS"];
-  const filteredPlayers = selectedPosition === "ALL" 
-    ? players 
-    : players.filter(p => p.position === selectedPosition);
+  // NEW: Loading State Guard (Eliminates the flash)
+  if (loading) {
+    return (
+      <main className="h-screen bg-[#0f172a] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-blue-500 font-black uppercase text-[10px] tracking-[0.3em]">Resuming Draft...</p>
+        </div>
+      </main>
+    );
+  }
 
   // START SCREEN
   if (gameState === "START") {
@@ -142,7 +176,7 @@ export default function Home() {
               <p className="text-slate-500 font-bold uppercase tracking-widest mt-2">{maxRounds} Round Simulation Complete</p>
             </div>
             <button 
-              onClick={() => window.location.reload()} 
+              onClick={resetDraft} 
               className="bg-white text-black px-8 py-3 rounded-xl font-black uppercase text-xs hover:bg-blue-600 hover:text-white transition-all shadow-lg"
             >
               Start New Draft
@@ -177,6 +211,13 @@ export default function Home() {
     );
   }
 
+  const currentPick = draftOrder[draftedPlayers.length];
+  const currentNeeds = (currentPick?.needs || []) as string[];
+  const filteredPlayers = selectedPosition === "ALL" 
+    ? players 
+    : players.filter(p => p.position === selectedPosition);
+  const positions = ["ALL", "QB", "RB", "WR", "TE", "OT", "IOL", "EDGE", "DL", "LB", "CB", "S", "K", "P", "LS"];
+
   // ACTIVE DRAFT SCREEN
   return (
     <main className="h-screen bg-[#0f172a] text-white p-8 flex flex-col overflow-hidden">
@@ -185,7 +226,10 @@ export default function Home() {
           Draft Engine <span className="text-white/20">2026</span>
         </h1>
         <div className="flex gap-4">
-          <button onClick={handleUndo} disabled={history.length === 0} className="bg-white/5 border border-white/10 px-6 py-3 rounded-xl font-black uppercase text-xs hover:bg-red-500/20 disabled:opacity-20 transition-all">
+          <button onClick={resetDraft} className="bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl font-black uppercase text-[10px] text-red-500 hover:bg-red-500 hover:text-white transition-all">
+            Reset
+          </button>
+          <button onClick={handleUndo} disabled={history.length === 0} className="bg-white/5 border border-white/10 px-6 py-3 rounded-xl font-black uppercase text-xs hover:bg-white/10 disabled:opacity-20 transition-all">
             Undo
           </button>
           <button onClick={() => setIsTradeModalOpen(true)} className="bg-blue-600 px-6 py-3 rounded-xl font-black uppercase text-xs hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all">
