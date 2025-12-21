@@ -1,3 +1,5 @@
+// src/types/draft.ts
+
 export type Player = {
   id: number;
   name: string;
@@ -9,11 +11,12 @@ export type Player = {
   wt?: string;
   cls?: string;
   rank?: number;
-  hs_stars?: number;
+  hs_stars?: number;     // Now matches your star rating logic
   // --- SCOUTING FIELDS ---
-  slug?: string;         // Unique URL-friendly name
-  bio?: string;          // Full scouting report text
-  pro_comp?: string;     // NFL pro comparison (Matches our SQL update)
+  slug?: string;         
+  bio?: string;          
+  pro_comp?: string;     
+  status?: string;       // Added to support the .eq('status', 'active') filter
 };
 
 export type DraftSlot = {
@@ -27,8 +30,8 @@ export type DraftSlot = {
   current_team_name: string;
   round: number;
   needs: string[];
-  selection?: Player;    // Stores the drafted player result
+  selection?: Player;    
   // --- TRADE MACHINE FIELDS ---
-  year?: number;         // Added to support 2026/2027 picks
-  is_consumed?: boolean; // Added to hide picks that already happened
+  year?: number;         
+  is_consumed?: boolean; 
 };

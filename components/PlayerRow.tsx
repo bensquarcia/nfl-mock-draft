@@ -1,14 +1,15 @@
+// src/components/PlayerRow.tsx
 import { Player } from '@/types/draft';
-import Link from 'next/link';
 
 interface PlayerRowProps {
   player: Player;
   rank: number;
   onDraft: (player: Player) => void;
+  onViewInfo: (player: Player) => void; // ADDED THIS
   isTeamNeed: boolean;
 }
 
-export default function PlayerRow({ player, rank, onDraft, isTeamNeed = false }: PlayerRowProps) {
+export default function PlayerRow({ player, rank, onDraft, onViewInfo, isTeamNeed = false }: PlayerRowProps) {
   return (
     <div className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
       isTeamNeed 
@@ -29,12 +30,13 @@ export default function PlayerRow({ player, rank, onDraft, isTeamNeed = false }:
         
         <div>
           <div className="flex items-center gap-3">
-            {/* CLICKABLE PLAYER NAME */}
-            <Link href={`/player/${player.slug || ""}`}>
-              <h3 className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors cursor-pointer decoration-blue-500/30 hover:underline">
-                {player.name}
-              </h3>
-            </Link>
+            {/* UPDATED: Click now triggers onViewInfo for virtual navigation */}
+            <div 
+              onClick={() => onViewInfo(player)}
+              className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors cursor-pointer decoration-blue-500/30 hover:underline"
+            >
+              {player.name}
+            </div>
             
             {isTeamNeed && (
               <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500 text-[10px] font-black uppercase tracking-tighter text-white animate-pulse">
@@ -59,7 +61,10 @@ export default function PlayerRow({ player, rank, onDraft, isTeamNeed = false }:
       </div>
 
       <button 
-        onClick={() => onDraft(player)}
+        onClick={(e) => {
+          e.stopPropagation(); // Prevents opening info when you just want to draft
+          onDraft(player);
+        }}
         className="opacity-0 group-hover:opacity-100 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black py-2.5 px-7 rounded-lg uppercase tracking-widest transition-all transform translate-x-4 group-hover:translate-x-0 active:scale-95 shadow-lg shadow-blue-500/20"
       >
         Draft Player

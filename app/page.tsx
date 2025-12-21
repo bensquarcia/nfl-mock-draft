@@ -28,9 +28,9 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white flex flex-col items-center justify-center p-8">
-      {/* Background Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-blue-600/20 blur-[120px] pointer-events-none" />
+    <main className="min-h-screen bg-[#0f172a] text-white flex flex-col items-center justify-center p-8 overflow-hidden">
+      {/* Animated Background Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-blue-600/20 blur-[120px] pointer-events-none animate-pulse" />
 
       <header className="text-center mb-16 relative z-10">
         <h1 className="text-7xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-500 to-blue-600">
@@ -44,9 +44,17 @@ export default function HomePage() {
           <Link 
             key={tool.title} 
             href={tool.link}
-            className={`group relative p-8 rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl transition-all hover:border-blue-500/50 hover:bg-slate-800/50 ${tool.status === "Coming Soon" ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.02] active:scale-95"}`}
+            // If the status is 'Coming Soon', we disable the pointer events
+            className={`group relative p-8 rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl transition-all 
+              ${tool.status === "Active" 
+                ? "hover:border-blue-500/50 hover:bg-slate-800/50 hover:scale-[1.02] active:scale-95 cursor-pointer" 
+                : "opacity-60 cursor-not-allowed"
+              }`}
+            onClick={(e) => {
+              if (tool.status === "Coming Soon") e.preventDefault();
+            }}
           >
-            <div className="text-4xl mb-6">{tool.icon}</div>
+            <div className="text-4xl mb-6 group-hover:scale-110 transition-transform duration-300">{tool.icon}</div>
             <h2 className="text-2xl font-black uppercase italic mb-3 group-hover:text-blue-400 transition-colors">
               {tool.title}
             </h2>

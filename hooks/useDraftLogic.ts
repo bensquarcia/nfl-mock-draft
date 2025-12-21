@@ -17,6 +17,31 @@ export function useDraftLogic() {
   const [selectedPosition, setSelectedPosition] = useState("ALL");
   const [history, setHistory] = useState<{drafted: Player[], pool: Player[]}[]>([]);
 
+  // --- NEW: Player Info Navigation Logic ---
+  const [selectedPlayerForInfo, setSelectedPlayerForInfo] = useState<Player | null>(null);
+
+  const openPlayerInfo = (player: Player) => {
+    setSelectedPlayerForInfo(player);
+    // Push a "virtual" state so the back button has something to 'pop'
+    window.history.pushState({ infoOpen: true }, "");
+  };
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // If back button is pressed, close player info instead of leaving page
+      if (selectedPlayerForInfo) {
+        setSelectedPlayerForInfo(null);
+      }
+      if (isTradeModalOpen) {
+        setIsTradeModalOpen(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedPlayerForInfo, isTradeModalOpen]);
+  // ------------------------------------------
+
   const generateFuturePicks = (order: DraftSlot[]) => {
     const years = [2026, 2027];
     const futurePicks: DraftSlot[] = [];
@@ -125,6 +150,7 @@ export function useDraftLogic() {
     gameState, loading, maxRounds, players, draftOrder, draftedPlayers,
     isTradeModalOpen, setIsTradeModalOpen, userTeam, selectedPosition,
     setSelectedPosition, startDraft, resetDraft, handleDraftPlayer,
-    handleUndo, handleConfirmTrade
+    handleUndo, handleConfirmTrade,
+    selectedPlayerForInfo, openPlayerInfo // Exported new logic
   };
 }
