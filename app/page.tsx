@@ -28,15 +28,15 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white flex flex-col items-center justify-center p-8 overflow-hidden">
-      {/* Animated Background Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-blue-600/20 blur-[120px] pointer-events-none animate-pulse" />
+    <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8 overflow-hidden relative">
+      {/* Soft Blue Gradient Background Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-blue-100/50 blur-[120px] pointer-events-none" />
 
       <header className="text-center mb-16 relative z-10">
-        <h1 className="text-7xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-500 to-blue-600">
-          Draft Central <span className="text-white/10">2026</span>
+        <h1 className="text-7xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-700 to-blue-800">
+          Draft Central <span className="text-slate-200">2026</span>
         </h1>
-        <p className="text-slate-400 mt-4 font-bold uppercase tracking-[0.4em] text-sm">The Ultimate Scouting Toolkit</p>
+        <p className="text-slate-500 mt-4 font-black uppercase tracking-[0.4em] text-sm">The Ultimate Scouting Toolkit</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full relative z-10">
@@ -44,18 +44,17 @@ export default function HomePage() {
           <Link 
             key={tool.title} 
             href={tool.link}
-            // If the status is 'Coming Soon', we disable the pointer events
-            className={`group relative p-8 rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl transition-all 
+            className={`group relative p-8 rounded-3xl border transition-all duration-300
               ${tool.status === "Active" 
-                ? "hover:border-blue-500/50 hover:bg-slate-800/50 hover:scale-[1.02] active:scale-95 cursor-pointer" 
-                : "opacity-60 cursor-not-allowed"
+                ? "bg-white border-slate-200 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1 cursor-pointer" 
+                : "bg-slate-100/50 border-slate-200 opacity-60 cursor-not-allowed"
               }`}
             onClick={(e) => {
               if (tool.status === "Coming Soon") e.preventDefault();
             }}
           >
             <div className="text-4xl mb-6 group-hover:scale-110 transition-transform duration-300">{tool.icon}</div>
-            <h2 className="text-2xl font-black uppercase italic mb-3 group-hover:text-blue-400 transition-colors">
+            <h2 className="text-2xl font-black uppercase italic mb-3 group-hover:text-blue-600 transition-colors">
               {tool.title}
             </h2>
             <p className="text-slate-500 text-sm font-medium leading-relaxed mb-6">
@@ -63,11 +62,11 @@ export default function HomePage() {
             </p>
             
             <div className="flex items-center justify-between">
-              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${tool.status === "Active" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "bg-slate-800 text-slate-500"}`}>
+              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${tool.status === "Active" ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-200 text-slate-500"}`}>
                 {tool.status}
               </span>
               {tool.status === "Active" && (
-                <span className="text-blue-500 font-black text-xs group-hover:translate-x-1 transition-transform">
+                <span className="text-blue-600 font-black text-xs group-hover:translate-x-1 transition-transform">
                   LAUNCH →
                 </span>
               )}
@@ -76,7 +75,7 @@ export default function HomePage() {
         ))}
       </div>
 
-      <footer className="mt-20 text-slate-600 font-bold uppercase text-[10px] tracking-widest">
+      <footer className="mt-20 text-slate-400 font-bold uppercase text-[10px] tracking-widest">
         Powered by Draft Engine v2.0
       </footer>
     </main>
