@@ -11,12 +11,13 @@ export type Player = {
   wt?: string;
   cls?: string;
   rank?: number;
-  hs_stars?: number;     // Now matches your star rating logic
+  hs_stars?: number; 
+  hometown?: string;    
   // --- SCOUTING FIELDS ---
   slug?: string;         
-  bio?: string;          
+  bio?: string;          // THIS MUST BE HERE
   pro_comp?: string;     
-  status?: string;       // Added to support the .eq('status', 'active') filter
+  status?: string;       
 };
 
 export type DraftSlot = {
