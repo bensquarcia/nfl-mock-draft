@@ -13,7 +13,11 @@ export default function StartScreen({ onStart }: StartScreenProps) {
         <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Select Draft Length</p>
         <div className="grid grid-cols-4 gap-2">
           {[1, 2, 3, 7].map(r => (
-            <button key={r} onClick={() => onStart(r)} className="bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-400 py-4 rounded-xl font-black text-xl transition-all active:scale-95">
+            <button 
+              key={r} 
+              onClick={() => onStart(r)} 
+              className="bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-400 py-4 rounded-xl font-black text-xl transition-all active:scale-95"
+            >
               {r === 7 ? "Full" : r}
             </button>
           ))}

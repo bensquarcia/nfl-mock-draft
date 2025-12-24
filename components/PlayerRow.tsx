@@ -7,9 +7,17 @@ interface PlayerRowProps {
   onDraft: (player: Player) => void;
   onViewInfo: (player: Player) => void;
   isTeamNeed: boolean;
+  draftButtonText?: string; // New optional prop for custom button text
 }
 
-export default function PlayerRow({ player, rank, onDraft, onViewInfo, isTeamNeed = false }: PlayerRowProps) {
+export default function PlayerRow({ 
+  player, 
+  rank, 
+  onDraft, 
+  onViewInfo, 
+  isTeamNeed = false,
+  draftButtonText = "DRAFT PLAYER" // Default value for the simulator
+}: PlayerRowProps) {
   return (
     <div className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
       isTeamNeed 
@@ -23,7 +31,6 @@ export default function PlayerRow({ player, rank, onDraft, onViewInfo, isTeamNee
         </span>
         
         {player.college_logo_url && (
-          /* REMOVED: bg-white, rounded, border, and shadow */
           <div className="w-12 h-12 flex items-center justify-center shrink-0">
             <img src={player.college_logo_url} alt="" className="w-full h-full object-contain" />
           </div>
@@ -67,7 +74,7 @@ export default function PlayerRow({ player, rank, onDraft, onViewInfo, isTeamNee
         }}
         className="opacity-0 group-hover:opacity-100 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black py-2.5 px-7 rounded-lg uppercase tracking-widest transition-all shadow-md active:scale-95"
       >
-        Draft Player
+        {draftButtonText}
       </button>
     </div>
   );

@@ -1,3 +1,4 @@
+// src/components/PlayerProfile.tsx
 import { Player } from '@/types/draft';
 
 interface PlayerProfileProps {
@@ -21,6 +22,7 @@ export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
 
       const upper = cleanSection.toUpperCase();
 
+      // 1. HEADERS
       if (upper === 'OVERVIEW:' || upper === 'STRENGTHS:' || upper === 'WEAKNESSES:') {
         return (
           <div key={idx} className="mt-10 mb-3 first:mt-0">
@@ -31,13 +33,15 @@ export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
         );
       }
 
+      // 2. BODY TEXT (Overview, Strengths, and Weaknesses)
+      // All now use 'italic', 'text-lg', and 'font-medium' for total consistency
       const isOverviewContent = idx < 3;
 
       return (
         <div 
           key={idx} 
-          className={`leading-relaxed text-lg whitespace-pre-line text-slate-700 font-medium ${
-            isOverviewContent ? "italic mb-12" : "mb-6"
+          className={`leading-relaxed text-lg whitespace-pre-line text-slate-700 font-medium italic ${
+            isOverviewContent ? "mb-12" : "mb-6"
           }`}
         >
           {cleanSection}
@@ -85,7 +89,6 @@ export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
               <span className="text-slate-200">/</span>
               <span className="text-slate-900">{player.cls}</span>
               <span className="text-slate-200">/</span>
-              {/* HOMETOWN SECTION */}
               <span className="flex items-center gap-1.5 text-slate-400">
                 <span className="text-[10px]">📍</span> {hometown}
               </span>
@@ -108,11 +111,10 @@ export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
             </section>
           </div>
 
-          {/* SIDEBAR: Physical, Pro Comp, and HS Rating */}
+          {/* SIDEBAR */}
           <div className="space-y-6">
             <div className="bg-slate-50 rounded-3xl border border-slate-200 p-8 h-fit shadow-sm sticky top-8 space-y-10">
               
-              {/* Physical Section */}
               <section>
                 <h3 className="text-slate-900 font-black uppercase text-[10px] tracking-widest mb-6 border-b border-slate-200 pb-3">
                   Physical Profile
@@ -129,7 +131,6 @@ export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
                 </div>
               </section>
 
-              {/* Pro Comp Section */}
               <section>
                 <h3 className="text-blue-600 font-black uppercase text-[10px] tracking-widest mb-4">
                   Pro Comparison
@@ -139,7 +140,6 @@ export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
                 </p>
               </section>
 
-              {/* HS Rating Section */}
               <section>
                 <h3 className="text-slate-500 font-black uppercase text-[10px] tracking-widest mb-4">
                   HS Star Rating

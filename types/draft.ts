@@ -10,12 +10,12 @@ export type Player = {
   ht?: string;
   wt?: string;
   cls?: string;
-  rank?: number;
+  rank: number;          // REMOVED '?' - Rank is now required to prevent UI errors
   hs_stars?: number; 
   hometown?: string;    
   // --- SCOUTING FIELDS ---
   slug?: string;         
-  bio?: string;          // THIS MUST BE HERE
+  bio?: string;          
   pro_comp?: string;     
   status?: string;       
 };
@@ -35,4 +35,12 @@ export type DraftSlot = {
   // --- TRADE MACHINE FIELDS ---
   year?: number;         
   is_consumed?: boolean; 
+};
+
+// NEW: Added for your Big Board feature
+export type BigBoard = {
+  id: string;
+  board_name: string;
+  player_ids: number[];
+  created_at: string;
 };
