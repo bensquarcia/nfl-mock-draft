@@ -10,37 +10,32 @@ export function useDraftLogic() {
   const [loading, setLoading] = useState(true);
   const [maxRounds, setMaxRounds] = useState(1);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [originalPlayers, setOriginalPlayers] = useState<Player[]>([]); 
   const [draftOrder, setDraftOrder] = useState<DraftSlot[]>([]);
+  const [originalOrder, setOriginalOrder] = useState<DraftSlot[]>([]); 
   const [draftedPlayers, setDraftedPlayers] = useState<Player[]>([]);
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [userTeam, setUserTeam] = useState("NY Giants");
   const [selectedPosition, setSelectedPosition] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState(""); // NEW: Search state
   const [history, setHistory] = useState<{drafted: Player[], pool: Player[]}[]>([]);
 
-  // --- NEW: Player Info Navigation Logic ---
+  // --- Player Info Navigation Logic ---
   const [selectedPlayerForInfo, setSelectedPlayerForInfo] = useState<Player | null>(null);
 
   const openPlayerInfo = (player: Player) => {
     setSelectedPlayerForInfo(player);
-    // Push a "virtual" state so the back button has something to 'pop'
     window.history.pushState({ infoOpen: true }, "");
   };
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      // If back button is pressed, close player info instead of leaving page
-      if (selectedPlayerForInfo) {
-        setSelectedPlayerForInfo(null);
-      }
-      if (isTradeModalOpen) {
-        setIsTradeModalOpen(false);
-      }
+      if (selectedPlayerForInfo) setSelectedPlayerForInfo(null);
+      if (isTradeModalOpen) setIsTradeModalOpen(false);
     };
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [selectedPlayerForInfo, isTradeModalOpen]);
-  // ------------------------------------------
 
   const generateFuturePicks = (order: DraftSlot[]) => {
     const years = [2026, 2027];
@@ -72,6 +67,7 @@ export function useDraftLogic() {
     async function fetchData() {
       const { data: pData } = await supabase.from('players').select('*').eq('status', 'active').order('rank', { ascending: true });
       const { data: dData } = await supabase.from('draft_order').select('*').order('slot_number');
+      
       const savedDrafted = localStorage.getItem('drafted_players');
       const savedGameState = localStorage.getItem('game_state');
       const savedMaxRounds = localStorage.getItem('max_rounds');
@@ -79,15 +75,24 @@ export function useDraftLogic() {
 
       let initialOrder = dData || [];
       const futureAssets = generateFuturePicks(initialOrder);
+      const fullOrder = [...initialOrder, ...futureAssets];
 
       if (pData) {
+        setOriginalPlayers(pData);
         if (savedDrafted) {
           const draftedIds = JSON.parse(savedDrafted).map((p: Player) => p.id);
           setPlayers(pData.filter(p => !draftedIds.includes(p.id)));
-        } else { setPlayers(pData); }
+        } else {
+          setPlayers(pData);
+        }
       }
-      if (savedOrder) { setDraftOrder(JSON.parse(savedOrder)); } 
-      else { setDraftOrder([...initialOrder, ...futureAssets]); }
+
+      setOriginalOrder(fullOrder);
+      if (savedOrder) {
+        setDraftOrder(JSON.parse(savedOrder));
+      } else {
+        setDraftOrder(fullOrder);
+      }
 
       if (savedDrafted) setDraftedPlayers(JSON.parse(savedDrafted));
       if (savedGameState) setGameState(savedGameState as GameState);
@@ -106,8 +111,32 @@ export function useDraftLogic() {
     }
   }, [draftedPlayers, gameState, maxRounds, draftOrder]);
 
-  const startDraft = (rounds: number) => { setMaxRounds(rounds); setGameState("DRAFT"); };
-  const resetDraft = () => { if (confirm("Reset current draft progress?")) { localStorage.clear(); window.location.reload(); } };
+  const startDraft = (rounds: number) => { 
+    setMaxRounds(rounds); 
+    setGameState("DRAFT"); 
+  };
+
+  const resetDraft = () => {
+    localStorage.removeItem('drafted_players');
+    localStorage.removeItem('game_state');
+    localStorage.removeItem('max_rounds');
+    localStorage.removeItem('draft_order');
+
+    setGameState("START");
+    setDraftedPlayers([]);
+    setPlayers(originalPlayers);
+    setDraftOrder(originalOrder);
+    setHistory([]);
+    setSelectedPosition("ALL");
+    setSearchQuery(""); // Clear search on reset
+  };
+
+  // --- NEW: FILTERED PLAYERS LOGIC ---
+  const filteredPlayers = players.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPos = selectedPosition === "ALL" || p.position === selectedPosition;
+    return matchesSearch && matchesPos;
+  });
 
   const handleDraftPlayer = (player: Player) => {
     const totalPicks = draftOrder.filter(p => p.round <= maxRounds && (!p.year || p.year === 2025)).length;
@@ -116,7 +145,9 @@ export function useDraftLogic() {
       setHistory([...history, { drafted: draftedPlayers, pool: players }]);
       setDraftedPlayers(nextDrafted);
       setPlayers(players.filter(p => p.id !== player.id));
-      if (nextDrafted.length === totalPicks) { setTimeout(() => setGameState("RESULTS"), 800); }
+      if (nextDrafted.length === totalPicks) { 
+        setTimeout(() => setGameState("RESULTS"), 800); 
+      }
     }
   };
 
@@ -147,10 +178,13 @@ export function useDraftLogic() {
   };
 
   return {
-    gameState, loading, maxRounds, players, draftOrder, draftedPlayers,
+    gameState, loading, maxRounds, 
+    players: filteredPlayers, // Return filtered list instead of raw pool
+    draftOrder, draftedPlayers,
     isTradeModalOpen, setIsTradeModalOpen, userTeam, selectedPosition,
-    setSelectedPosition, startDraft, resetDraft, handleDraftPlayer,
+    setSelectedPosition, searchQuery, setSearchQuery, // Export search states
+    startDraft, resetDraft, handleDraftPlayer,
     handleUndo, handleConfirmTrade,
-    selectedPlayerForInfo, openPlayerInfo // Exported new logic
+    selectedPlayerForInfo, openPlayerInfo 
   };
 }

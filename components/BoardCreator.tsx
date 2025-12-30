@@ -10,7 +10,6 @@ interface BoardCreatorProps {
   setRankedPlayers: (players: Player[]) => void;
   boardSize: number;
   boardName: string;
-  setBoardName: (name: string) => void;
   onComplete: () => void;
   onReset: () => void;
 }
@@ -20,8 +19,6 @@ export default function BoardCreator({
   rankedPlayers, 
   setRankedPlayers, 
   boardSize, 
-  boardName, 
-  setBoardName, 
   onReset 
 }: BoardCreatorProps) {
   
@@ -49,62 +46,71 @@ export default function BoardCreator({
   });
 
   return (
-    <main className="h-screen bg-slate-50 text-slate-900 p-8 flex flex-col overflow-hidden">
-      {/* Header Area */}
-      <header className="max-w-7xl mx-auto w-full flex justify-between items-center mb-6 shrink-0">
-        <div className="flex flex-col text-left">
-          <input 
-            value={boardName}
-            onChange={(e) => setBoardName(e.target.value)}
-            className="text-3xl font-black italic uppercase bg-transparent outline-none text-blue-600 focus:border-b-2 border-blue-600"
-          />
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Slotting {rankedPlayers.length} / {boardSize} Prospects
+    <main className="h-[calc(100vh-80px)] bg-transparent text-slate-900 px-8 pb-8 flex flex-col overflow-hidden">
+      
+      {/* Mini Progress Bar & Controls Area */}
+      <div className="max-w-7xl mx-auto w-full flex justify-between items-end mb-6 shrink-0">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+             <span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600 bg-blue-50 px-3 py-1 rounded-md">
+                Board Progress
+             </span>
+             <p className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">
+              {rankedPlayers.length} / {boardSize} Prospects Ranked
             </p>
-            <div className="h-1 w-24 bg-slate-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-600 transition-all duration-500" 
-                style={{ width: `${(rankedPlayers.length / boardSize) * 100}%` }}
-              />
-            </div>
+          </div>
+          <div className="h-1.5 w-64 bg-slate-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-blue-600 transition-all duration-500 shadow-[0_0_8px_rgba(37,99,235,0.4)]" 
+              style={{ width: `${(rankedPlayers.length / boardSize) * 100}%` }}
+            />
           </div>
         </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={onReset} 
-            className="px-6 py-3 rounded-xl font-black uppercase text-[10px] text-slate-400 hover:text-slate-600 border border-transparent hover:border-slate-200 transition-all"
-          >
-            Change Size
-          </button>
-        </div>
-      </header>
 
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow overflow-hidden pb-4">
+        <button 
+          onClick={onReset} 
+          className="px-5 py-2.5 rounded-xl font-black uppercase text-[10px] text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 hover:border-blue-100 transition-all active:scale-95"
+        >
+          Reset Board Size
+        </button>
+      </div>
+
+      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow overflow-hidden">
         
         {/* LEFT SIDE: Your Ranked Board */}
         <div className="lg:col-span-5 h-full overflow-hidden bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col">
-          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <h3 className="font-black italic uppercase text-sm tracking-tighter">Official Rankings</h3>
+          <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h3 className="font-black italic uppercase text-sm tracking-tighter text-slate-700">Official Rankings</h3>
+            <span className="text-[10px] font-bold text-slate-600 bg-white px-2 py-1 rounded border border-slate-100 uppercase">TOP {boardSize}</span>
           </div>
           <div className="flex-grow overflow-y-auto p-4 space-y-2 custom-scrollbar">
             {Array.from({ length: boardSize }).map((_, i) => {
               const player = rankedPlayers[i];
               return (
                 <div key={i} className={`flex items-center gap-4 p-3 rounded-xl border transition-all ${player ? 'bg-white border-slate-100 shadow-sm group' : 'bg-slate-50/30 border-dashed border-slate-200 opacity-40'}`}>
-                  <span className="w-8 text-xl font-black italic text-slate-300 group-hover:text-blue-600">{i + 1}</span>
+                  {/* DARKENED RANK NUMBER */}
+                  <span className="w-8 text-xl font-black italic text-slate-600 group-hover:text-blue-600 transition-colors">{i + 1}</span>
                   {player ? (
                     <>
                       <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                         {player.college_logo_url && <img src={player.college_logo_url} className="w-full h-full object-contain" alt="" />}
                       </div>
                       <div className="flex-grow text-left">
-                        <p className="font-black uppercase text-sm italic leading-none">{player.name}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">{player.position} | {player.college}</p>
+                        <p className="font-black uppercase text-sm italic leading-none text-slate-800">{player.name}</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mt-1">{player.position} | {player.college}</p>
                       </div>
-                      <button onClick={() => handleRemove(player.id)} className="text-slate-300 hover:text-red-500 font-black uppercase text-[10px] px-2">Remove</button>
+                      <button 
+                        onClick={() => handleRemove(player.id)} 
+                        className="text-slate-400 hover:text-red-500 font-black uppercase text-[9px] tracking-widest px-2 transition-colors"
+                      >
+                        Remove
+                      </button>
                     </>
-                  ) : <div className="flex-grow py-3 px-2"><div className="h-1.5 w-20 bg-slate-200 rounded-full" /></div>}
+                  ) : (
+                    <div className="flex-grow py-3 px-2">
+                      <div className="h-1.5 w-20 bg-slate-100 rounded-full" />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -114,12 +120,19 @@ export default function BoardCreator({
         {/* RIGHT SIDE: Filterable Player Pool */}
         <section className="lg:col-span-7 flex flex-col h-full overflow-hidden">
           <div className="space-y-4 mb-4 shrink-0">
-            <input 
-              placeholder="SEARCH PROSPECTS..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 px-6 py-4 rounded-2xl shadow-sm outline-none font-black italic uppercase text-sm focus:ring-2 ring-blue-500/20"
-            />
+            <div className="relative">
+              <input 
+                placeholder="SEARCH PROSPECTS..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                /* DARKENED TYPING AND PLACEHOLDER */
+                className="w-full bg-white border border-slate-200 pl-12 pr-6 py-4 rounded-2xl shadow-sm outline-none font-black italic uppercase text-sm focus:ring-4 ring-blue-500/5 focus:border-blue-500/30 transition-all text-slate-900 placeholder:text-slate-500"
+              />
+              <svg className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+            </div>
+            
             {/* Filter Bar */}
             <div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar">
               {positions.map(pos => (
@@ -127,7 +140,9 @@ export default function BoardCreator({
                   key={pos}
                   onClick={() => setSelectedPos(pos)}
                   className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shrink-0 border ${
-                    selectedPos === pos ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-slate-200 text-slate-400"
+                    selectedPos === pos 
+                    ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-200" 
+                    : "bg-white border-slate-200 text-slate-600 hover:border-blue-400"
                   }`}
                 >
                   {pos}
@@ -136,7 +151,7 @@ export default function BoardCreator({
             </div>
           </div>
 
-          <div className="flex-grow overflow-y-auto pr-4 space-y-4 custom-scrollbar">
+          <div className="flex-grow overflow-y-auto pr-2 space-y-3 custom-scrollbar">
             {filteredPool.map((player, index) => (
               <PlayerRow 
                 key={player.id} 
@@ -145,9 +160,14 @@ export default function BoardCreator({
                 onDraft={() => handleAdd(player)} 
                 onViewInfo={() => setViewingPlayer(player)} 
                 isTeamNeed={false}
-                draftButtonText="SELECT" // Pass this prop to your PlayerRow component
+                draftButtonText="SELECT"
               />
             ))}
+            {filteredPool.length === 0 && (
+              <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                <p className="font-black uppercase text-slate-400 italic tracking-widest">No Prospects Found</p>
+              </div>
+            )}
           </div>
         </section>
       </div>

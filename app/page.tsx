@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import { Trophy, LayoutList, Database, ChevronRight } from 'lucide-react';
 
 export default function HomePage() {
@@ -15,7 +16,7 @@ export default function HomePage() {
     {
       title: "Big Board Creator",
       description: "Rank your top prospects and build your own custom scouting board.",
-      link: "/big-board", // Updated link
+      link: "/big-board",
       icon: <LayoutList className="w-8 h-8" />,
       status: "Active",
       color: "indigo"
@@ -31,53 +32,76 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8">
+    <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8 relative overflow-hidden">
       {/* Subtle Background Decoration */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-blue-100/50 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-100/40 rounded-full blur-[120px] pointer-events-none" />
 
-      <header className="text-center mb-16 relative z-10">
-        <h1 className="text-7xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-700 to-blue-800">
-          Draft Central <span className="text-slate-200">2026</span>
-        </h1>
-        <p className="text-slate-400 mt-4 font-black uppercase tracking-[0.4em] text-sm">The Ultimate Scouting Toolkit</p>
+      {/* NEW CLEAN BRANDED HEADER */}
+      <header className="text-center mb-20 relative z-10 flex flex-col items-center">
+        <div className="inline-block px-4 py-1.5 bg-white border border-slate-200 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8 shadow-sm">
+          Professional Scouting Tools
+        </div>
+        
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-24 h-24 relative">
+            <Image 
+              src="/logo.png" 
+              alt="Draft Network Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <div className="flex flex-col items-center">
+            <h1 className="text-6xl font-black italic tracking-tighter uppercase text-slate-900 leading-none">
+              Draft <span className="text-blue-600">Network</span>
+            </h1>
+            <p className="text-slate-400 mt-4 font-black uppercase tracking-[0.5em] text-[11px] ml-[0.5em]">
+              The Ultimate Scouting Toolkit
+            </p>
+          </div>
+        </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full relative z-10 px-4">
         {tools.map((tool) => (
           <Link 
             key={tool.title} 
             href={tool.link}
-            className={`group relative p-10 rounded-[2.5rem] border bg-white transition-all shadow-sm ${
+            className={`group relative p-10 rounded-[3rem] border bg-white transition-all shadow-sm flex flex-col ${
               tool.status === "Coming Soon" 
                 ? "opacity-60 cursor-not-allowed border-slate-100" 
-                : "hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 active:scale-95 border-slate-200"
+                : "hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 active:scale-[0.98] border-slate-200"
             }`}
           >
-            <div className={`mb-8 p-4 rounded-2xl inline-block transition-colors ${
-              tool.status === "Active" ? "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white" : "bg-slate-50 text-slate-400"
+            <div className={`mb-8 p-5 rounded-[1.5rem] inline-block self-start transition-all duration-300 ${
+              tool.status === "Active" 
+                ? "bg-blue-50 text-blue-600 group-hover:bg-slate-900 group-hover:text-white group-hover:rotate-6 shadow-sm" 
+                : "bg-slate-50 text-slate-400"
             }`}>
               {tool.icon}
             </div>
             
-            <h2 className="text-2xl font-black uppercase italic mb-3 transition-colors">
+            <h2 className="text-2xl font-black uppercase italic mb-3 text-slate-900">
               {tool.title}
             </h2>
-            <p className="text-slate-500 text-sm font-medium leading-relaxed mb-10">
+            <p className="text-slate-500 text-sm font-medium leading-relaxed mb-12">
               {tool.description}
             </p>
             
             <div className="flex items-center justify-between mt-auto">
-              <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+              <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
                 tool.status === "Active" 
-                  ? "bg-blue-50 text-blue-600 border-blue-100" 
+                  ? "bg-slate-50 text-slate-900 border-slate-200" 
                   : "bg-slate-50 text-slate-400 border-slate-100"
               }`}>
                 {tool.status}
               </span>
               
               {tool.status === "Active" && (
-                <div className="flex items-center gap-1 text-blue-600 font-black text-xs uppercase tracking-tighter">
-                  Launch <ChevronRight size={14} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
+                <div className="flex items-center gap-1 text-blue-600 font-black text-xs uppercase tracking-tighter group-hover:gap-2 transition-all">
+                  Launch Tool <ChevronRight size={14} strokeWidth={3} />
                 </div>
               )}
             </div>
@@ -85,10 +109,14 @@ export default function HomePage() {
         ))}
       </div>
 
-      <footer className="mt-24 flex flex-col items-center gap-4">
-        <div className="h-px w-12 bg-slate-200" />
-        <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.3em]">
-          Powered by Draft Engine v2.0
+      <footer className="mt-24 flex flex-col items-center gap-6">
+        <div className="flex items-center gap-3">
+            <div className="h-px w-8 bg-slate-200" />
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            <div className="h-px w-8 bg-slate-200" />
+        </div>
+        <p className="text-slate-400 font-black uppercase text-[9px] tracking-[0.4em]">
+          Copyright © 2026 Draft Network • Premium Scouting v2.0
         </p>
       </footer>
     </main>
