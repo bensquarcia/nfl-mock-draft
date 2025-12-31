@@ -1,4 +1,5 @@
-// src/components/PlayerRow.tsx
+"use client";
+import React from 'react';
 import { Player } from '@/types/draft';
 
 interface PlayerRowProps {
@@ -6,8 +7,8 @@ interface PlayerRowProps {
   rank: number;
   onDraft: (player: Player) => void;
   onViewInfo: (player: Player) => void;
-  isTeamNeed: boolean;
-  draftButtonText?: string; // New optional prop for custom button text
+  isTeamNeed?: boolean;
+  draftButtonText?: string;
 }
 
 export default function PlayerRow({ 
@@ -16,66 +17,75 @@ export default function PlayerRow({
   onDraft, 
   onViewInfo, 
   isTeamNeed = false,
-  draftButtonText = "DRAFT PLAYER" // Default value for the simulator
+  draftButtonText = "DRAFT" 
 }: PlayerRowProps) {
+  
   return (
-    <div className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
-      isTeamNeed 
-        ? "bg-blue-50 border-blue-200 shadow-sm" 
-        : "bg-white border-slate-200 shadow-sm"
-    } hover:border-blue-400 hover:shadow-md`}>
+    <div className="group relative flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl transition-all cursor-default touch-action-manipulation">
       
-      <div className="flex items-center gap-6">
-        <span className={`text-xl font-black w-8 ${isTeamNeed ? "text-blue-600" : "text-slate-300 group-hover:text-blue-400"}`}>
+      {/* Rank & Logo */}
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
+        <span className="w-6 md:w-8 text-sm md:text-lg font-black italic text-slate-400 group-hover:text-blue-600 transition-colors">
           {rank}
         </span>
-        
-        {player.college_logo_url && (
-          <div className="w-12 h-12 flex items-center justify-center shrink-0">
-            <img src={player.college_logo_url} alt="" className="w-full h-full object-contain" />
-          </div>
-        )}
-        
-        <div>
-          <div className="flex items-center gap-3">
-            <div 
-              onClick={() => onViewInfo(player)}
-              className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors cursor-pointer hover:underline decoration-blue-500/30"
-            >
-              {player.name}
-            </div>
-            
-            {isTeamNeed && (
-              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-600 text-[10px] font-black uppercase tracking-tighter text-white animate-pulse">
-                Team Need
-              </span>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-              {player.position} <span className="mx-1 text-slate-300">|</span> {player.college}
-            </p>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
-              <span>{player.ht || '--'}</span>
-              <span className="text-slate-200">•</span>
-              <span>{player.wt ? `${player.wt} lbs` : '--'}</span>
-              <span className="text-slate-200">•</span>
-              <span className="text-blue-600">{player.cls || '--'}</span>
-            </div>
-          </div>
+        <div className="w-10 h-10 md:w-12 md:h-12 relative shrink-0 bg-slate-50 rounded-lg p-1">
+          {player.college_logo_url && (
+            <img 
+              src={player.college_logo_url} 
+              alt={player.college} 
+              className="w-full h-full object-contain"
+            />
+          )}
         </div>
       </div>
 
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          onDraft(player);
-        }}
-        className="opacity-0 group-hover:opacity-100 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black py-2.5 px-7 rounded-lg uppercase tracking-widest transition-all shadow-md active:scale-95"
+      {/* Clickable Player Info: Clicking here shows the profile */}
+      <div 
+        className="flex-grow min-w-0 cursor-pointer hover:opacity-70 transition-opacity" 
+        onClick={() => onViewInfo(player)}
+        title="View Player Profile"
       >
-        {draftButtonText}
-      </button>
+        <div className="flex items-center gap-2 mb-0.5">
+          <p className="font-black uppercase text-xs md:text-sm italic leading-none text-slate-900 truncate">
+            {player.name}
+          </p>
+          {isTeamNeed && (
+            <span className="bg-blue-600 text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+              NEED
+            </span>
+          )}
+        </div>
+        <p className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase truncate">
+          {player.position} <span className="text-slate-300 mx-1">|</span> {player.college}
+        </p>
+      </div>
+
+      {/* Action Area */}
+      <div className="flex items-center gap-1 md:gap-3 shrink-0">
+        {/* Info Icon - ONLY VISIBLE ON MOBILE (Hiddon on md screens and up) */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewInfo(player);
+          }}
+          className="md:hidden p-2 text-slate-300 active:text-blue-600 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+          </svg>
+        </button>
+
+        {/* Separate Draft Button */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation(); // Prevents triggering onViewInfo
+            onDraft(player);
+          }}
+          className="min-h-[44px] md:min-h-0 bg-blue-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl font-black uppercase text-[10px] md:text-[11px] shadow-sm hover:bg-blue-700 active:scale-95 transition-all cursor-pointer touch-manipulation"
+        >
+          {draftButtonText}
+        </button>
+      </div>
     </div>
   );
 }
