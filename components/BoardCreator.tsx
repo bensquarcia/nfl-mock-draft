@@ -48,7 +48,7 @@ export default function BoardCreator({
   return (
     <main className="h-[calc(100vh-80px)] bg-transparent text-slate-900 px-8 pb-8 flex flex-col overflow-hidden">
       
-      {/* Mini Progress Bar & Controls Area */}
+      {/* Progress Bar Area */}
       <div className="max-w-7xl mx-auto w-full flex justify-between items-end mb-6 shrink-0">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
@@ -88,7 +88,6 @@ export default function BoardCreator({
               const player = rankedPlayers[i];
               return (
                 <div key={i} className={`flex items-center gap-4 p-3 rounded-xl border transition-all ${player ? 'bg-white border-slate-100 shadow-sm group' : 'bg-slate-50/30 border-dashed border-slate-200 opacity-40'}`}>
-                  {/* DARKENED RANK NUMBER */}
                   <span className="w-8 text-xl font-black italic text-slate-600 group-hover:text-blue-600 transition-colors">{i + 1}</span>
                   {player ? (
                     <>
@@ -125,7 +124,6 @@ export default function BoardCreator({
                 placeholder="SEARCH PROSPECTS..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                /* DARKENED TYPING AND PLACEHOLDER */
                 className="w-full bg-white border border-slate-200 pl-12 pr-6 py-4 rounded-2xl shadow-sm outline-none font-black italic uppercase text-sm focus:ring-4 ring-blue-500/5 focus:border-blue-500/30 transition-all text-slate-900 placeholder:text-slate-500"
               />
               <svg className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -133,7 +131,6 @@ export default function BoardCreator({
               </svg>
             </div>
             
-            {/* Filter Bar */}
             <div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar">
               {positions.map(pos => (
                 <button
@@ -152,17 +149,22 @@ export default function BoardCreator({
           </div>
 
           <div className="flex-grow overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-            {filteredPool.map((player, index) => (
-              <PlayerRow 
-                key={player.id} 
-                player={player} 
-                rank={index + 1} 
-                onDraft={() => handleAdd(player)} 
-                onViewInfo={() => setViewingPlayer(player)} 
-                isTeamNeed={false}
-                draftButtonText="SELECT"
-              />
-            ))}
+            {filteredPool.map((player) => {
+              // Calculate their integer rank from the MASTER pool
+              const masterRank = players.findIndex(p => p.id === player.id) + 1;
+
+              return (
+                <PlayerRow 
+                  key={player.id} 
+                  player={player} 
+                  rank={masterRank} 
+                  onDraft={() => handleAdd(player)} 
+                  onViewInfo={() => setViewingPlayer(player)} 
+                  isTeamNeed={false}
+                  draftButtonText="SELECT"
+                />
+              );
+            })}
             {filteredPool.length === 0 && (
               <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
                 <p className="font-black uppercase text-slate-400 italic tracking-widest">No Prospects Found</p>
@@ -172,7 +174,14 @@ export default function BoardCreator({
         </section>
       </div>
 
-      {viewingPlayer && <PlayerProfile player={viewingPlayer} onClose={() => setViewingPlayer(null)} />}
+      {/* FIX: Passing staticRank to PlayerProfile to fix the error and decimal issue */}
+      {viewingPlayer && (
+        <PlayerProfile 
+          player={viewingPlayer} 
+          staticRank={players.findIndex(p => p.id === viewingPlayer.id) + 1}
+          onClose={() => setViewingPlayer(null)} 
+        />
+      )}
     </main>
   );
 }

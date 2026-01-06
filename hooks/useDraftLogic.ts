@@ -17,10 +17,9 @@ export function useDraftLogic() {
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [userTeam, setUserTeam] = useState("NY Giants");
   const [selectedPosition, setSelectedPosition] = useState("ALL");
-  const [searchQuery, setSearchQuery] = useState(""); // NEW: Search state
+  const [searchQuery, setSearchQuery] = useState(""); 
   const [history, setHistory] = useState<{drafted: Player[], pool: Player[]}[]>([]);
 
-  // --- Player Info Navigation Logic ---
   const [selectedPlayerForInfo, setSelectedPlayerForInfo] = useState<Player | null>(null);
 
   const openPlayerInfo = (player: Player) => {
@@ -41,9 +40,13 @@ export function useDraftLogic() {
     const years = [2026, 2027];
     const futurePicks: DraftSlot[] = [];
     const uniqueTeams = Array.from(new Set(order.map(p => p.current_team_name)));
+    
     years.forEach(year => {
       for (let round = 1; round <= 7; round++) {
         uniqueTeams.forEach((team, idx) => {
+          // Safety Check: If team is null or undefined, skip this iteration to prevent crash
+          if (!team) return;
+
           futurePicks.push({
             id: Math.random() * 1000000,
             slot_number: 1000 + (year * 100) + (round * 40) + idx,
@@ -52,10 +55,11 @@ export function useDraftLogic() {
             year: year,
             current_team_name: team,
             team_name: team,
-            team_abbr: team.substring(0, 3).toUpperCase(),
-            team_logo_url: order.find(p => p.current_team_name === team)?.team_logo_url || "",
+            // FIX: Using optional chaining and fallback for null-safety
+            team_abbr: team?.substring(0, 3).toUpperCase() || "TBD",
+            team_logo_url: order.find(p => p.team_name === team)?.team_logo_url || "",
             original_team_name: team,
-            needs: order.find(p => p.current_team_name === team)?.needs || []
+            needs: order.find(p => p.team_name === team)?.needs || []
           } as DraftSlot);
         });
       }
@@ -66,7 +70,8 @@ export function useDraftLogic() {
   useEffect(() => {
     async function fetchData() {
       const { data: pData } = await supabase.from('players').select('*').eq('status', 'active').order('rank', { ascending: true });
-      const { data: dData } = await supabase.from('draft_order').select('*').order('slot_number');
+      // Fetching by pick_number to ensure the 1-224 order is used
+      const { data: dData } = await supabase.from('draft_order').select('*').order('pick_number', { ascending: true });
       
       const savedDrafted = localStorage.getItem('drafted_players');
       const savedGameState = localStorage.getItem('game_state');
@@ -102,15 +107,6 @@ export function useDraftLogic() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (gameState !== "START") {
-      localStorage.setItem('drafted_players', JSON.stringify(draftedPlayers));
-      localStorage.setItem('game_state', gameState);
-      localStorage.setItem('max_rounds', String(maxRounds));
-      localStorage.setItem('draft_order', JSON.stringify(draftOrder));
-    }
-  }, [draftedPlayers, gameState, maxRounds, draftOrder]);
-
   const startDraft = (rounds: number) => { 
     setMaxRounds(rounds); 
     setGameState("DRAFT"); 
@@ -128,10 +124,9 @@ export function useDraftLogic() {
     setDraftOrder(originalOrder);
     setHistory([]);
     setSelectedPosition("ALL");
-    setSearchQuery(""); // Clear search on reset
+    setSearchQuery("");
   };
 
-  // --- NEW: FILTERED PLAYERS LOGIC ---
   const filteredPlayers = players.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPos = selectedPosition === "ALL" || p.position === selectedPosition;
@@ -162,14 +157,40 @@ export function useDraftLogic() {
 
   const handleConfirmTrade = (userPicks: DraftSlot[], cpuPicks: DraftSlot[], cpuTeam: string) => {
     const activeTeamName = draftOrder.filter(p => !p.year || p.year === 2025)[draftedPlayers.length]?.current_team_name;
-    const userTeamNeeds = draftOrder.find(p => p.current_team_name === activeTeamName)?.needs || [];
-    const cpuTeamNeeds = draftOrder.find(p => p.current_team_name === cpuTeam)?.needs || [];
+
+    const cpuTeamRef = draftOrder.find(p => p.team_name === cpuTeam);
+    const userTeamRef = draftOrder.find(p => p.team_name === activeTeamName);
+
+    const cpuLogo = cpuTeamRef?.team_logo_url || "";
+    const userLogo = userTeamRef?.team_logo_url || "";
+    const cpuNeeds = cpuTeamRef?.needs || [];
+    const userNeeds = userTeamRef?.needs || [];
 
     const updatedOrder = draftOrder.map(pick => {
-      const isUserGivingThisAway = userPicks.some(p => p.slot_number === pick.slot_number);
-      const isCpuGivingThisAway = cpuPicks.some(p => p.slot_number === pick.slot_number);
-      if (isUserGivingThisAway) return { ...pick, current_team_name: cpuTeam, needs: cpuTeamNeeds };
-      if (isCpuGivingThisAway) return { ...pick, current_team_name: activeTeamName, needs: userTeamNeeds };
+      const matchPick = (p: DraftSlot) => 
+        p.slot_number === pick.slot_number && 
+        p.round === pick.round && 
+        (p.year || 2025) === (pick.year || 2025);
+
+      const isUserGivingThisAway = userPicks.some(matchPick);
+      const isCpuGivingThisAway = cpuPicks.some(matchPick);
+
+      if (isUserGivingThisAway) {
+        return { 
+          ...pick, 
+          current_team_name: cpuTeam, 
+          team_logo_url: cpuLogo,
+          needs: cpuNeeds 
+        };
+      }
+      if (isCpuGivingThisAway) {
+        return { 
+          ...pick, 
+          current_team_name: activeTeamName, 
+          team_logo_url: userLogo,
+          needs: userNeeds 
+        };
+      }
       return pick;
     });
 
@@ -179,10 +200,10 @@ export function useDraftLogic() {
 
   return {
     gameState, loading, maxRounds, 
-    players: filteredPlayers, // Return filtered list instead of raw pool
+    players: filteredPlayers,
     draftOrder, draftedPlayers,
     isTradeModalOpen, setIsTradeModalOpen, userTeam, selectedPosition,
-    setSelectedPosition, searchQuery, setSearchQuery, // Export search states
+    setSelectedPosition, searchQuery, setSearchQuery,
     startDraft, resetDraft, handleDraftPlayer,
     handleUndo, handleConfirmTrade,
     selectedPlayerForInfo, openPlayerInfo 

@@ -3,10 +3,11 @@ import { Player } from '@/types/draft';
 
 interface PlayerProfileProps {
   player: Player;
+  staticRank: number; // ADDED THIS PROP
   onClose: () => void;
 }
 
-export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
+export default function PlayerProfile({ player, staticRank, onClose }: PlayerProfileProps) {
   // Casting hometown for when you add it to Supabase later
   const hometown = (player as any).hometown || "City, State";
   const starCount = player.hs_stars || 0;
@@ -34,7 +35,6 @@ export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
       }
 
       // 2. BODY TEXT (Overview, Strengths, and Weaknesses)
-      // All now use 'italic', 'text-lg', and 'font-medium' for total consistency
       const isOverviewContent = idx < 3;
 
       return (
@@ -63,7 +63,8 @@ export default function PlayerProfile({ player, onClose }: PlayerProfileProps) {
           </button>
           <div className="flex items-center gap-4">
             <div className="bg-slate-100 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200 text-slate-500">
-              {player.rank ? `Rank #${player.rank}` : 'Unranked'}
+              {/* FIXED: Now uses staticRank instead of player.rank to avoid decimals */}
+              {staticRank ? `Rank #${staticRank}` : 'Unranked'}
             </div>
             <div className="bg-blue-600 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-md">
               Scouting Report

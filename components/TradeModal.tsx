@@ -20,12 +20,18 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
   const userPicks = allPicks.filter(p => p.current_team_name === userTeam && (p.year || 2025) === activeYear);
   const cpuPicks = allPicks.filter(p => p.current_team_name === selectedCpuTeam && (p.year || 2025) === activeYear);
 
+  // FIX: Helper to create a unique ID for every single pick across all rounds and years
+  const getPickId = (pick: DraftSlot) => `${pick.year || 2025}-${pick.round}-${pick.slot_number}`;
+
   const togglePick = (pick: DraftSlot, isUser: boolean) => {
     const selected = isUser ? userSelectedPicks : cpuSelectedPicks;
     const setter = isUser ? setUserSelectedPicks : setCpuSelectedPicks;
     
-    if (selected.some(p => p.slot_number === pick.slot_number)) {
-      setter(selected.filter(p => p.slot_number !== pick.slot_number));
+    const pickId = getPickId(pick);
+
+    // Use the Unique ID instead of just slot_number to prevent logo mixing
+    if (selected.some(p => getPickId(p) === pickId)) {
+      setter(selected.filter(p => getPickId(p) !== pickId));
     } else {
       setter([...selected, { ...pick }]); 
     }
@@ -33,7 +39,7 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6">
-      <div className="bg-white border border-slate-200 w-full max-w-5xl rounded-[2.5rem] overflow-hidden flex flex-col h-[90vh] md:h-[85vh] shadow-2xl">
+      <div className="bg-white border border-slate-200 w-full max-w-5xl rounded-[2.5rem] overflow-hidden flex flex-col h-[90vh] md:h-[85vh] shadow-2xl text-slate-900">
         
         {/* Header Section */}
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
@@ -56,8 +62,8 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
               ))}
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -76,25 +82,20 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
               {userPicks.length > 0 ? (
                 userPicks.map(pick => (
                   <div 
-                    key={`${pick.slot_number}-${pick.current_team_name}`}
+                    key={getPickId(pick)}
                     onClick={() => togglePick(pick, true)}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center ${userSelectedPicks.some(p => p.slot_number === pick.slot_number) ? 'bg-blue-600 border-blue-600 shadow-md' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center ${userSelectedPicks.some(p => getPickId(p) === getPickId(pick)) ? 'bg-blue-600 border-blue-600 shadow-md' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
                   >
                     <div>
-                      <p className={`font-black text-xs uppercase ${userSelectedPicks.some(p => p.slot_number === pick.slot_number) ? 'text-white' : 'text-slate-900'}`}>Round {pick.round}</p>
-                      <p className={`text-[10px] font-bold uppercase tracking-tight ${userSelectedPicks.some(p => p.slot_number === pick.slot_number) ? 'text-blue-100' : 'text-slate-400'}`}>
+                      <p className={`font-black text-xs uppercase ${userSelectedPicks.some(p => getPickId(p) === getPickId(pick)) ? 'text-white' : 'text-slate-900'}`}>Round {pick.round}</p>
+                      <p className={`text-[10px] font-bold uppercase tracking-tight ${userSelectedPicks.some(p => getPickId(p) === getPickId(pick)) ? 'text-blue-100' : 'text-slate-400'}`}>
                         {pick.year && pick.year > 2025 ? `${pick.year} Future Pick` : `Pick #${pick.slot_number}`}
                       </p>
                     </div>
-                    {userSelectedPicks.some(p => p.slot_number === pick.slot_number) && (
-                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                      </div>
-                    )}
                   </div>
                 ))
               ) : (
-                <p className="text-slate-400 text-[10px] font-bold uppercase italic py-12 text-center border-2 border-dashed border-slate-100 rounded-3xl">No assets for {activeYear}</p>
+                <p className="text-slate-400 text-[10px] font-bold uppercase italic py-12 text-center">No assets for {activeYear}</p>
               )}
             </div>
           </div>
@@ -104,7 +105,7 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
             <div className="mb-4">
                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Trade Partner</p>
                <select 
-                className="w-full bg-white border border-slate-200 rounded-xl p-3 font-black text-xs uppercase outline-none text-slate-900 focus:ring-4 ring-blue-500/5 focus:border-blue-500 transition-all cursor-pointer shadow-sm"
+                className="w-full bg-white border border-slate-200 rounded-xl p-3 font-black text-xs uppercase text-slate-900 outline-none focus:border-blue-500 transition-all cursor-pointer shadow-sm"
                 value={selectedCpuTeam}
                 onChange={(e) => { setSelectedCpuTeam(e.target.value); setCpuSelectedPicks([]); }}
                >
@@ -117,26 +118,20 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
               {selectedCpuTeam ? (
                 cpuPicks.map(pick => (
                   <div 
-                    key={`${pick.slot_number}-${pick.current_team_name}`}
+                    key={getPickId(pick)}
                     onClick={() => togglePick(pick, false)}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center ${cpuSelectedPicks.some(p => p.slot_number === pick.slot_number) ? 'bg-blue-600 border-blue-600 shadow-md' : 'bg-white border-slate-200 hover:border-slate-300'}`}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center ${cpuSelectedPicks.some(p => getPickId(p) === getPickId(pick)) ? 'bg-blue-600 border-blue-600 shadow-md' : 'bg-white border-slate-200 hover:border-slate-300'}`}
                   >
                     <div>
-                      <p className={`font-black text-xs uppercase ${cpuSelectedPicks.some(p => p.slot_number === pick.slot_number) ? 'text-white' : 'text-slate-900'}`}>Round {pick.round}</p>
-                      <p className={`text-[10px] font-bold uppercase tracking-tight ${cpuSelectedPicks.some(p => p.slot_number === pick.slot_number) ? 'text-blue-100' : 'text-slate-400'}`}>
+                      <p className={`font-black text-xs uppercase ${cpuSelectedPicks.some(p => getPickId(p) === getPickId(pick)) ? 'text-white' : 'text-slate-900'}`}>Round {pick.round}</p>
+                      <p className={`text-[10px] font-bold uppercase tracking-tight ${cpuSelectedPicks.some(p => getPickId(p) === getPickId(pick)) ? 'text-blue-100' : 'text-slate-400'}`}>
                         {pick.year && pick.year > 2025 ? `${pick.year} Future Pick` : `Pick #${pick.slot_number}`}
                       </p>
                     </div>
-                    {cpuSelectedPicks.some(p => p.slot_number === pick.slot_number) && (
-                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                      </div>
-                    )}
                   </div>
                 ))
               ) : (
                 <div className="h-40 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl mt-2 bg-white/50">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300 mb-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                   <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest italic text-center px-10">Select a partner</p>
                 </div>
               )}
@@ -144,10 +139,10 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
           </div>
         </div>
 
-        {/* Footer / Confirm Area */}
+        {/* Footer */}
         <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
-          <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1">Proposed Exchange</p>
+          <div className="flex flex-col">
+            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1 text-center md:text-left">Proposed Exchange</p>
             <div className="text-slate-900 text-xs font-black uppercase flex items-center gap-2">
               <span className={userSelectedPicks.length > 0 ? "text-blue-600" : ""}>{userSelectedPicks.length} Giving</span>
               <span className="text-slate-200">|</span> 

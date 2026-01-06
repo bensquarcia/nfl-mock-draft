@@ -1,6 +1,7 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react"; // 1. Added the import
+import { Analytics } from "@vercel/analytics/next"; 
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,13 +14,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// --- UPDATED SEO & TAB METADATA ---
+// --- SEO & TAB METADATA PRESERVED ---
 export const metadata: Metadata = {
   metadataBase: new URL("https://upnextdraft.com"),
   title: {
-    // This is the main tab name for your home page
     default: "UpNext Draft Network | 2026 NFL Mock Drafts & Big Boards",
-    // This ensures other pages look like "Simulator | UpNext Draft Network"
     template: "%s | UpNext Draft Network",
   },
   description: "The premier 2026 NFL Draft toolkit. Run full 7-round mock drafts with realistic trades and build your custom big board prospect rankings.",
@@ -63,7 +62,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-        <Analytics /> {/* 2. Added the component here */}
+        {/* Vercel Analytics tracking script added back */}
+        <Analytics />
       </body>
     </html>
   );
