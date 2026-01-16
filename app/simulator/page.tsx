@@ -1,3 +1,4 @@
+// src/app/simulator/page.tsx
 "use client";
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -17,7 +18,8 @@ export default function Home() {
     isTradeModalOpen, setIsTradeModalOpen, userTeam, selectedPosition,
     setSelectedPosition, searchQuery, setSearchQuery, 
     startDraft, resetDraft, handleDraftPlayer,
-    handleUndo, handleConfirmTrade
+    handleUndo, handleConfirmTrade,
+    isPaused, togglePause // Added these from the hook
   } = useDraftLogic();
 
   const [viewingPlayer, setViewingPlayer] = useState<Player | null>(null);
@@ -55,12 +57,7 @@ export default function Home() {
   const currentNeeds = (currentPick?.needs || []) as string[];
   const tradeablePicks = draftOrder.filter((p, index) => !((!p.year || p.year === 2025) && index < draftedPlayers.length));
 
-  // MASTER LIST: We use draftOrder to find the true original rank of players
-  // This assumes draftOrder reflects the initial big board order.
   const getStaticRank = (player: Player) => {
-    // If you have an originalPlayers array in your hook, use that instead.
-    // Otherwise, we calculate based on the index in the current pool + drafted count
-    // to maintain the "Big Board" feel.
     return players.findIndex(p => p.id === player.id) + draftedPlayers.length + 1;
   };
 
@@ -90,6 +87,18 @@ export default function Home() {
         </div>
 
         <div className="flex gap-1.5 md:gap-3">
+          {/* NEW PAUSE/RESUME BUTTON */}
+          <button 
+            onClick={togglePause}
+            className={`px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] transition-all shadow-md active:scale-95 flex items-center gap-2 ${
+              isPaused 
+                ? "bg-emerald-500 text-white animate-pulse" 
+                : "bg-slate-100 text-slate-600 border border-slate-200"
+            }`}
+          >
+            {isPaused ? "▶ Resume" : "⏸ Pause"}
+          </button>
+
           <button 
             onClick={() => handleUndo()} 
             disabled={draftedPlayers.length === 0} 
@@ -136,6 +145,7 @@ export default function Home() {
                 </div>
 
                 <div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar shrink-0">
+                  {/* Filter Buttons... */}
                   {["ALL", "QB", "RB", "WR", "TE", "OT", "IOL", "EDGE", "DL", "LB", "CB", "S", "K", "P", "LS"].map(pos => (
                     <button 
                       key={pos} 
@@ -151,11 +161,17 @@ export default function Home() {
               <div className="flex-grow overflow-y-auto pr-1 md:pr-2 space-y-2.5 md:space-y-3 custom-scrollbar pb-10 lg:pb-0">
                 <div className="p-3 md:p-4 bg-white border border-slate-200 rounded-2xl flex justify-between items-center shadow-sm sticky top-0 z-10">
                    <div className="flex items-center gap-2 md:gap-3">
-                     <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-blue-600 animate-pulse" />
+                     <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isPaused ? 'bg-amber-500' : 'bg-blue-600 animate-pulse'}`} />
                      <p className="text-[10px] md:text-[11px] font-black text-slate-900 uppercase tracking-widest truncate max-w-[120px] md:max-w-none">
-                       On the Clock: <span className="text-blue-600 ml-1 italic">{currentPick?.current_team_name || "Complete"}</span>
+                       {isPaused ? "Draft Paused: " : "On the Clock: "} 
+                       <span className={`${isPaused ? 'text-amber-600' : 'text-blue-600'} ml-1 italic`}>
+                         {currentPick?.current_team_name || "Complete"}
+                       </span>
                      </p>
                    </div>
+                   {isPaused && (
+                     <span className="text-[8px] font-black text-amber-500 animate-pulse">Waiting for action</span>
+                   )}
                 </div>
 
                 {players.map((player) => (

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Player, DraftSlot } from '@/types/draft';
+import { getBestAutodraftPick } from '@/lib/draftUtils';
 
 type GameState = "START" | "DRAFT" | "RESULTS";
 
@@ -9,6 +10,8 @@ export function useDraftLogic() {
   const [gameState, setGameState] = useState<GameState>("START");
   const [loading, setLoading] = useState(true);
   const [maxRounds, setMaxRounds] = useState(1);
+  const [controlledTeams, setControlledTeams] = useState<string[]>([]);
+  const [isPaused, setIsPaused] = useState(false); 
   const [players, setPlayers] = useState<Player[]>([]);
   const [originalPlayers, setOriginalPlayers] = useState<Player[]>([]); 
   const [draftOrder, setDraftOrder] = useState<DraftSlot[]>([]);
@@ -21,6 +24,27 @@ export function useDraftLogic() {
   const [history, setHistory] = useState<{drafted: Player[], pool: Player[]}[]>([]);
 
   const [selectedPlayerForInfo, setSelectedPlayerForInfo] = useState<Player | null>(null);
+
+  // --- AUTODRAFT ENGINE (UPDATED WITH RESUME & TRADE-PAUSE LOGIC) ---
+  useEffect(() => {
+    // This condition ensures the draft stays paused if the user is trading 
+    // or if they manually hit the pause/resume button.
+    if (gameState !== "DRAFT" || loading || isPaused || isTradeModalOpen) return;
+
+    const currentPick = draftOrder[draftedPlayers.length];
+    if (!currentPick) return;
+
+    const isUserTeam = controlledTeams.includes(currentPick.current_team_name);
+
+    if (!isUserTeam) {
+      const timer = setTimeout(() => {
+        const cpuPick = getBestAutodraftPick(players, currentPick);
+        handleDraftPlayer(cpuPick);
+      }, 600); 
+
+      return () => clearTimeout(timer);
+    }
+  }, [draftedPlayers.length, gameState, controlledTeams, players, draftOrder, loading, isPaused, isTradeModalOpen]);
 
   const openPlayerInfo = (player: Player) => {
     setSelectedPlayerForInfo(player);
@@ -44,7 +68,6 @@ export function useDraftLogic() {
     years.forEach(year => {
       for (let round = 1; round <= 7; round++) {
         uniqueTeams.forEach((team, idx) => {
-          // Safety Check: If team is null or undefined, skip this iteration to prevent crash
           if (!team) return;
 
           futurePicks.push({
@@ -55,7 +78,6 @@ export function useDraftLogic() {
             year: year,
             current_team_name: team,
             team_name: team,
-            // FIX: Using optional chaining and fallback for null-safety
             team_abbr: team?.substring(0, 3).toUpperCase() || "TBD",
             team_logo_url: order.find(p => p.team_name === team)?.team_logo_url || "",
             original_team_name: team,
@@ -70,7 +92,6 @@ export function useDraftLogic() {
   useEffect(() => {
     async function fetchData() {
       const { data: pData } = await supabase.from('players').select('*').eq('status', 'active').order('rank', { ascending: true });
-      // Fetching by pick_number to ensure the 1-224 order is used
       const { data: dData } = await supabase.from('draft_order').select('*').order('pick_number', { ascending: true });
       
       const savedDrafted = localStorage.getItem('drafted_players');
@@ -107,8 +128,10 @@ export function useDraftLogic() {
     fetchData();
   }, []);
 
-  const startDraft = (rounds: number) => { 
+  const startDraft = (rounds: number, teams: string[]) => { 
     setMaxRounds(rounds); 
+    setControlledTeams(teams); 
+    setIsPaused(true); // CHANGE: Now explicitly sets to true to ensure the draft starts paused
     setGameState("DRAFT"); 
   };
 
@@ -125,7 +148,12 @@ export function useDraftLogic() {
     setHistory([]);
     setSelectedPosition("ALL");
     setSearchQuery("");
+    setControlledTeams([]);
+    setIsPaused(false);
   };
+
+  // Helper function to be called by your UI button
+  const togglePause = () => setIsPaused(!isPaused); 
 
   const filteredPlayers = players.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -156,7 +184,8 @@ export function useDraftLogic() {
   };
 
   const handleConfirmTrade = (userPicks: DraftSlot[], cpuPicks: DraftSlot[], cpuTeam: string) => {
-    const activeTeamName = draftOrder.filter(p => !p.year || p.year === 2025)[draftedPlayers.length]?.current_team_name;
+    const activePickIndex = draftedPlayers.length;
+    const activeTeamName = draftOrder.filter(p => !p.year || p.year === 2025)[activePickIndex]?.current_team_name;
 
     const cpuTeamRef = draftOrder.find(p => p.team_name === cpuTeam);
     const userTeamRef = draftOrder.find(p => p.team_name === activeTeamName);
@@ -206,6 +235,8 @@ export function useDraftLogic() {
     setSelectedPosition, searchQuery, setSearchQuery,
     startDraft, resetDraft, handleDraftPlayer,
     handleUndo, handleConfirmTrade,
-    selectedPlayerForInfo, openPlayerInfo 
+    selectedPlayerForInfo, openPlayerInfo,
+    controlledTeams,
+    isPaused, togglePause 
   };
 }
