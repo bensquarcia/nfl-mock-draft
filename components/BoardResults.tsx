@@ -1,6 +1,4 @@
 "use client";
-import { useRef } from 'react';
-import html2canvas from 'html2canvas';
 import { Player } from '@/types/draft';
 
 interface BoardResultsProps {
@@ -16,26 +14,17 @@ export default function BoardResults({
   boardName, 
   onBack 
 }: BoardResultsProps) {
-  const resultsRef = useRef<HTMLDivElement>(null);
-
-  const handleDownload = async () => {
-    if (!resultsRef.current) return;
-    
-    // useCORS is vital if your logos are hosted on a different domain (like Supabase)
-    const canvas = await html2canvas(resultsRef.current, { 
-      backgroundColor: '#f8fafc', 
-      scale: 2,
-      useCORS: true 
-    });
-    
-    const link = document.createElement('a');
-    link.download = `${boardName.toLowerCase().replace(/\s+/g, '-')}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  };
-
+  
   // Logic to determine grid columns based on size
   const gridCols = boardSize <= 50 ? "grid-cols-5" : "grid-cols-2 md:grid-cols-6";
+
+  // CLEAN FIX: Just trigger the onBack prop. 
+  // The Parent component handles actually hiding this screen.
+  const handleBack = () => {
+    if (typeof onBack === 'function') {
+      onBack();
+    }
+  };
 
   return (
     <main className="min-h-screen bg-slate-50 p-8 flex flex-col items-center">
@@ -50,23 +39,16 @@ export default function BoardResults({
         </div>
         <div className="flex gap-4">
           <button 
-            onClick={onBack} 
-            className="px-6 py-3 text-slate-400 hover:text-slate-600 font-black uppercase text-[10px] transition-colors"
+            type="button"
+            onClick={handleBack} 
+            className="px-6 py-3 text-slate-400 hover:text-slate-600 font-black uppercase text-[10px] transition-colors cursor-pointer"
           >
             Back to Editor
-          </button>
-          <button 
-            onClick={handleDownload} 
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-black uppercase text-xs shadow-lg transition-all active:scale-95"
-          >
-            Download PNG
           </button>
         </div>
       </div>
 
-      {/* This is the area captured by the screenshot */}
       <div 
-        ref={resultsRef} 
         className={`w-full max-w-7xl bg-white p-12 rounded-[3rem] border border-slate-200 shadow-sm grid ${gridCols} gap-4`}
       >
         {Array.from({ length: boardSize }).map((_, i) => {

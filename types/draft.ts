@@ -32,6 +32,8 @@ export type DraftSlot = {
   round: number;
   needs: string[];
   selection?: Player;    
+  // --- NEW FIELD FOR RESULTS VIEW ---
+  isUser: boolean;       // Tells the app if this pick belongs to the user
   // --- TRADE MACHINE FIELDS ---
   year?: number;         
   is_consumed?: boolean; 

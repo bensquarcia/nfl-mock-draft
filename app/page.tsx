@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import Image from 'next/image';
-import { Trophy, LayoutList, Database, ChevronRight } from 'lucide-react';
+import { Trophy, LayoutList, ChevronRight } from 'lucide-react';
 
 export default function HomePage() {
   const tools = [
@@ -20,24 +20,43 @@ export default function HomePage() {
       icon: <LayoutList className="w-8 h-8" />,
       status: "Active",
       color: "indigo"
-    },
-    {
-      title: "Prospect Database",
-      description: "Deep dive into player stats, college tape, and scouting reports.",
-      link: "#",
-      icon: <Database className="w-8 h-8" />,
-      status: "Coming Soon",
-      color: "slate"
     }
   ];
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      {/* Social Links - Fixed Top Right */}
+      <div className="fixed top-6 right-6 z-[100] flex items-center gap-3">
+        {/* REPLACE THE HREF BELOW WITH YOUR ACTUAL X LINK */}
+        <Link 
+          href="https://x.com/UpNextDraft" 
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-black hover:text-white hover:shadow-lg transition-all duration-300 group"
+        >
+          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </Link>
+        
+        {/* REPLACE THE HREF BELOW WITH YOUR ACTUAL REDDIT LINK */}
+        <Link 
+          href="https://www.reddit.com/user/UpNext_Draft_Network/" 
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-[#FF4500] hover:text-white hover:shadow-lg transition-all duration-300"
+        >
+          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.056 1.597.04.282.063.551.063.847 0 2.87-3.406 5.2-7.647 5.2-4.241 0-7.647-2.33-7.647-5.2 0-.303.026-.584.073-.873a1.74 1.74 0 0 1-.992-1.571c0-.968.786-1.754 1.754-1.754.463 0 .884.18 1.189.468 1.185-.843 2.825-1.396 4.632-1.485l.842-3.953a.26.26 0 0 1 .316-.201l2.96.623a1.248 1.248 0 0 1 1.018-.519zm-8.214 7.647c-.61 0-1.108.497-1.108 1.107 0 .61.498 1.108 1.108 1.108.61 0 1.107-.498 1.107-1.108 0-.61-.497-1.107-1.107-1.107zm6.403 0c-.61 0-1.109.497-1.109 1.107 0 .61.498 1.108 1.109 1.108.61 0 1.107-.498 1.107-1.108 0-.61-.497-1.107-1.107-1.107zm-7.054 3.75a.25.25 0 0 0-.251.274 3.978 3.978 0 0 0 3.737 3.66 3.978 3.978 0 0 0 3.738-3.66.25.25 0 0 0-.44-.19 3.483 3.483 0 0 1-3.298 3.09 3.483 3.483 0 0 1-3.296-3.09.25.25 0 0 0-.19-.084z"/>
+          </svg>
+        </Link>
+      </div>
+
       {/* Subtle Background Decoration */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-100/40 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* NEW CLEAN BRANDED HEADER */}
+      {/* CLEAN BRANDED HEADER */}
       <header className="text-center mb-20 relative z-10 flex flex-col items-center">
         <div className="inline-block px-4 py-1.5 bg-white border border-slate-200 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8 shadow-sm">
           Professional Scouting Tools
@@ -64,22 +83,14 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full relative z-10 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full relative z-10 px-4">
         {tools.map((tool) => (
           <Link 
             key={tool.title} 
             href={tool.link}
-            className={`group relative p-10 rounded-[3rem] border bg-white transition-all shadow-sm flex flex-col ${
-              tool.status === "Coming Soon" 
-                ? "opacity-60 cursor-not-allowed border-slate-100" 
-                : "hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 active:scale-[0.98] border-slate-200"
-            }`}
+            className="group relative p-10 rounded-[3rem] border bg-white transition-all shadow-sm flex flex-col hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 active:scale-[0.98] border-slate-200"
           >
-            <div className={`mb-8 p-5 rounded-[1.5rem] inline-block self-start transition-all duration-300 ${
-              tool.status === "Active" 
-                ? "bg-blue-50 text-blue-600 group-hover:bg-slate-900 group-hover:text-white group-hover:rotate-6 shadow-sm" 
-                : "bg-slate-50 text-slate-400"
-            }`}>
+            <div className="mb-8 p-5 rounded-[1.5rem] inline-block self-start transition-all duration-300 bg-blue-50 text-blue-600 group-hover:bg-slate-900 group-hover:text-white group-hover:rotate-6 shadow-sm">
               {tool.icon}
             </div>
             
@@ -91,25 +102,19 @@ export default function HomePage() {
             </p>
             
             <div className="flex items-center justify-between mt-auto">
-              <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
-                tool.status === "Active" 
-                  ? "bg-slate-50 text-slate-900 border-slate-200" 
-                  : "bg-slate-50 text-slate-400 border-slate-100"
-              }`}>
+              <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border bg-slate-50 text-slate-900 border-slate-200">
                 {tool.status}
               </span>
               
-              {tool.status === "Active" && (
-                <div className="flex items-center gap-1 text-blue-600 font-black text-xs uppercase tracking-tighter group-hover:gap-2 transition-all">
-                  Launch Tool <ChevronRight size={14} strokeWidth={3} />
-                </div>
-              )}
+              <div className="flex items-center gap-1 text-blue-600 font-black text-xs uppercase tracking-tighter group-hover:gap-2 transition-all">
+                Launch Tool <ChevronRight size={14} strokeWidth={3} />
+              </div>
             </div>
           </Link>
         ))}
       </div>
 
-      <footer className="mt-24 flex flex-col items-center gap-6">
+      <footer className="mt-24 flex flex-col items-center gap-4">
         <div className="flex items-center gap-3">
             <div className="h-px w-8 bg-slate-200" />
             <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />

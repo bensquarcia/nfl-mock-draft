@@ -131,7 +131,14 @@ export function useDraftLogic() {
   const startDraft = (rounds: number, teams: string[]) => { 
     setMaxRounds(rounds); 
     setControlledTeams(teams); 
-    setIsPaused(true); // CHANGE: Now explicitly sets to true to ensure the draft starts paused
+    setIsPaused(true); 
+    
+    // CHANGE: Update draftOrder to flag which slots belong to the user
+    setDraftOrder(prev => prev.map(slot => ({
+      ...slot,
+      isUser: teams.includes(slot.current_team_name)
+    })));
+
     setGameState("DRAFT"); 
   };
 

@@ -34,11 +34,13 @@ export default function BigBoardPage() {
     fetchPlayers();
   }, []);
 
-  useEffect(() => {
-    if (mode === 'creator' && rankedPlayers.length >= boardSize) {
+  // --- FIXED LOGIC: Triggers results ONLY when a player is added, not on back-click ---
+  const handleSetRankedPlayers = (val: Player[]) => {
+    setRankedPlayers(val);
+    if (val.length >= boardSize && mode === 'creator') {
       setMode('results');
     }
-  }, [rankedPlayers, boardSize, mode]);
+  };
 
   // --- NEW UNIFIED HEADER (Logo + Title in Top Left) ---
   const UnifiedHeader = () => (
@@ -127,9 +129,8 @@ export default function BigBoardPage() {
         <BoardCreator 
           players={players}
           rankedPlayers={rankedPlayers}
-          setRankedPlayers={(val: Player[]) => setRankedPlayers(val)}
+          setRankedPlayers={handleSetRankedPlayers}
           boardSize={boardSize}
-          // We pass boardName but NO setBoardName function to keep it non-editable
           boardName={boardName} 
           onComplete={() => setMode('results')}
           onReset={() => setMode('start')}
