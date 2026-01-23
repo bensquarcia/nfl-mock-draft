@@ -2,6 +2,29 @@
 import { DraftSlot } from '@/types/draft';
 import { useState } from 'react';
 
+// Logic Model: Jimmy Johnson Draft Value Chart (Classic 3000pt Scale)
+const getPickValue = (pick: DraftSlot) => {
+  if (pick.year && pick.year > 2025) {
+    // Future picks are valued as middle-of-round assets (devalued by 1 year)
+    const futureRoundValues = [0, 600, 200, 75, 40, 20, 10, 5];
+    return futureRoundValues[pick.round] || 0;
+  }
+  
+  // Standard values for Round 1-7 (approximate slope)
+  const slot = pick.slot_number;
+  if (slot <= 1) return 3000;
+  if (slot <= 5) return 1700;
+  if (slot <= 10) return 1300;
+  if (slot <= 20) return 850;
+  if (slot <= 32) return 600;
+  if (pick.round === 2) return 350;
+  if (pick.round === 3) return 150;
+  if (pick.round === 4) return 60;
+  if (pick.round === 5) return 30;
+  if (pick.round === 6) return 15;
+  return 5;
+};
+
 interface TradeModalProps {
   userTeam: string;
   allPicks: DraftSlot[];
@@ -15,21 +38,25 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
   const [cpuSelectedPicks, setCpuSelectedPicks] = useState<DraftSlot[]>([]);
   const [activeYear, setActiveYear] = useState<number>(2025);
 
-  const teams = Array.from(new Set(allPicks.map(p => p.current_team_name))).filter(t => t !== userTeam).sort();
+  // Math Logic
+  const userValue = userSelectedPicks.reduce((sum, p) => sum + getPickValue(p), 0);
+  const cpuValue = cpuSelectedPicks.reduce((sum, p) => sum + getPickValue(p), 0);
   
+  // Ratio: 1.0 is perfectly fair. Below 0.85 is rejected.
+  const fairnessRatio = userValue > 0 ? cpuValue / userValue : 0;
+  const isFair = fairnessRatio >= 0.85 && fairnessRatio <= 1.25;
+
+  const teams = Array.from(new Set(allPicks.map(p => p.current_team_name))).filter(t => t !== userTeam).sort();
   const userPicks = allPicks.filter(p => p.current_team_name === userTeam && (p.year || 2025) === activeYear);
   const cpuPicks = allPicks.filter(p => p.current_team_name === selectedCpuTeam && (p.year || 2025) === activeYear);
 
-  // FIX: Helper to create a unique ID for every single pick across all rounds and years
   const getPickId = (pick: DraftSlot) => `${pick.year || 2025}-${pick.round}-${pick.slot_number}`;
 
   const togglePick = (pick: DraftSlot, isUser: boolean) => {
     const selected = isUser ? userSelectedPicks : cpuSelectedPicks;
     const setter = isUser ? setUserSelectedPicks : setCpuSelectedPicks;
-    
     const pickId = getPickId(pick);
 
-    // Use the Unique ID instead of just slot_number to prevent logo mixing
     if (selected.some(p => getPickId(p) === pickId)) {
       setter(selected.filter(p => getPickId(p) !== pickId));
     } else {
@@ -139,25 +166,59 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
-          <div className="flex flex-col">
-            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1 text-center md:text-left">Proposed Exchange</p>
-            <div className="text-slate-900 text-xs font-black uppercase flex items-center gap-2">
-              <span className={userSelectedPicks.length > 0 ? "text-blue-600" : ""}>{userSelectedPicks.length} Giving</span>
-              <span className="text-slate-200">|</span> 
-              <span className={cpuSelectedPicks.length > 0 ? "text-blue-600" : ""}>{cpuSelectedPicks.length} Receiving</span>
+        {/* Footer with Trade Value Logic */}
+        <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col gap-6 shrink-0">
+          
+          {/* Fairness Bar */}
+          <div className="w-full space-y-2">
+            <div className="flex justify-between items-end">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Trade Fairness Meter</p>
+              <p className={`text-[10px] font-black uppercase tracking-tighter ${isFair ? 'text-green-600' : 'text-slate-400'}`}>
+                {userValue === 0 && cpuValue === 0 ? "Pending Selection" : isFair ? "Fair Exchange" : fairnessRatio < 0.85 ? "Insufficient Value" : "Overpayment"}
+              </p>
+            </div>
+            <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden relative">
+              <div 
+                className={`h-full transition-all duration-500 rounded-full ${isFair ? 'bg-green-500' : 'bg-amber-400'}`}
+                style={{ width: `${Math.min(fairnessRatio * 50, 100)}%` }}
+              />
+              {/* Target Zone Marker */}
+              <div className="absolute top-0 left-[42%] w-[10%] h-full border-x border-white/30 bg-green-400/20" title="Green Zone" />
             </div>
           </div>
-          <button 
-            type="button"
-            disabled={!selectedCpuTeam || (userSelectedPicks.length === 0 && cpuSelectedPicks.length === 0)}
-            onClick={() => onConfirmTrade([...userSelectedPicks], [...cpuSelectedPicks], selectedCpuTeam)}
-            className="w-full md:w-auto bg-slate-900 hover:bg-blue-600 disabled:opacity-20 text-white font-black px-12 py-4 rounded-2xl uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95"
-          >
-            Confirm Trade
-          </button>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col">
+              <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1 text-center md:text-left">Value Analysis</p>
+              <div className="text-slate-900 text-xs font-black uppercase flex items-center gap-2">
+                <span className="text-blue-600">{userValue} Pts Out</span>
+                <span className="text-slate-200">|</span> 
+                <span className="text-blue-600">{cpuValue} Pts In</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 w-full md:w-auto">
+              <button 
+                type="button"
+                disabled={!selectedCpuTeam || (userSelectedPicks.length === 0 && cpuSelectedPicks.length === 0)}
+                onClick={() => onConfirmTrade([...userSelectedPicks], [...cpuSelectedPicks], selectedCpuTeam)}
+                className="flex-1 md:w-48 bg-blue-600 hover:bg-blue-700 disabled:opacity-20 text-white font-black px-6 py-4 rounded-2xl uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95"
+              >
+                Force Trade
+              </button>
+              
+              <button 
+                type="button"
+                disabled={!selectedCpuTeam || !isFair}
+                onClick={() => onConfirmTrade([...userSelectedPicks], [...cpuSelectedPicks], selectedCpuTeam)}
+                className="flex-1 md:w-48 bg-slate-900 hover:bg-slate-800 disabled:opacity-10 text-white font-black px-6 py-4 rounded-2xl uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 border-b-4 border-slate-700"
+              >
+                Accept Trade
+              </button>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
   );
