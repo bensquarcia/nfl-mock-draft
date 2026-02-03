@@ -79,57 +79,59 @@ export default function Home() {
   return (
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       
-      <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white border-b border-slate-100 shadow-sm">
-        <div className="flex items-center gap-2 md:gap-4">
-          <Link 
-            href="/" 
-            className="bg-slate-50 border border-slate-200 text-slate-600 p-2 rounded-xl hover:bg-white hover:shadow-md transition-all active:scale-95 flex items-center justify-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-          </Link>
-          <div className="h-6 md:h-8 w-[1px] bg-slate-200 mx-1" />
-          <div className="flex items-center gap-2 md:gap-3">
-            <div className="w-6 h-6 md:w-8 md:h-8 relative">
-              <Image src="/logo.png" alt="Logo" fill className="object-contain" />
-            </div>
-            <h2 className="text-[10px] md:text-sm font-black italic uppercase tracking-tighter leading-none text-slate-900">
-              Mock Draft <span className="text-blue-600">Simulator</span>
-            </h2>
-          </div>
-        </div>
-
-        <div className="flex gap-1.5 md:gap-3">
-          {/* CONDITIONALLY RENDER PAUSE BUTTON */}
-          {!isControllingAllTeams && (
-            <button 
-              onClick={togglePause}
-              className={`px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] transition-all shadow-md active:scale-95 flex items-center gap-2 ${
-                isPaused 
-                  ? "bg-emerald-500 text-white animate-pulse" 
-                  : "bg-slate-100 text-slate-600 border border-slate-200"
-              }`}
+      {/* HIDE NAV ON RESULTS SCREEN */}
+      {gameState !== "RESULTS" && (
+        <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white border-b border-slate-100 shadow-sm">
+          <div className="flex items-center gap-2 md:gap-4">
+            <Link 
+              href="/" 
+              className="bg-slate-50 border border-slate-200 text-slate-600 p-2 rounded-xl hover:bg-white hover:shadow-md transition-all active:scale-95 flex items-center justify-center"
             >
-              {isPaused ? "▶ Resume" : "⏸ Pause"}
-            </button>
-          )}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </Link>
+            <div className="h-6 md:h-8 w-[1px] bg-slate-200 mx-1" />
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-6 h-6 md:w-8 md:h-8 relative">
+                <Image src="/logo.png" alt="Logo" fill className="object-contain" />
+              </div>
+              <h2 className="text-[10px] md:text-sm font-black italic uppercase tracking-tighter leading-none text-slate-900">
+                Mock Draft <span className="text-blue-600">Simulator</span>
+              </h2>
+            </div>
+          </div>
 
-          <button 
-            onClick={() => handleUndo()} 
-            disabled={draftedPlayers.length === 0} 
-            className="hidden lg:block bg-slate-900 text-white border border-black px-4 py-1.5 rounded-xl font-black uppercase text-[10px] hover:bg-blue-600 disabled:opacity-20 transition-all shadow-md active:scale-95"
-          >
-            Undo
-          </button>
-          <button onClick={() => setIsTradeModalOpen(true)} className="bg-blue-600 px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] text-white hover:bg-blue-700 transition-all shadow-md active:scale-95">Trade Machine</button>
-          <button onClick={resetDraft} className="bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] hover:bg-red-600 hover:text-white transition-all active:scale-95">Reset</button>
-        </div>
-      </nav>
+          <div className="flex gap-1.5 md:gap-3">
+            {!isControllingAllTeams && (
+              <button 
+                onClick={togglePause}
+                className={`px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] transition-all shadow-md active:scale-95 flex items-center gap-2 ${
+                  isPaused 
+                    ? "bg-emerald-500 text-white animate-pulse" 
+                    : "bg-slate-100 text-slate-600 border border-slate-200"
+                }`}
+              >
+                {isPaused ? "▶ Resume" : "⏸ Pause"}
+              </button>
+            )}
+
+            <button 
+              onClick={() => handleUndo()} 
+              disabled={draftedPlayers.length === 0} 
+              className="hidden lg:block bg-slate-900 text-white border border-black px-4 py-1.5 rounded-xl font-black uppercase text-[10px] hover:bg-blue-600 disabled:opacity-20 transition-all shadow-md active:scale-95"
+            >
+              Undo
+            </button>
+            <button onClick={() => setIsTradeModalOpen(true)} className="bg-blue-600 px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] text-white hover:bg-blue-700 transition-all shadow-md active:scale-95">Trade Machine</button>
+            <button onClick={resetDraft} className="bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] hover:bg-red-600 hover:text-white transition-all active:scale-95">Reset</button>
+          </div>
+        </nav>
+      )}
 
       {gameState === "RESULTS" ? (
-        <div className="min-h-screen bg-slate-50 pt-16 md:pt-20 overflow-y-auto">
+        <div className="min-h-screen bg-slate-50 pt-0 overflow-y-auto">
           <ResultsScreen draftedPlayers={draftedPlayers} draftOrder={draftOrder} maxRounds={maxRounds} onReset={resetDraft} />
         </div>
       ) : (
