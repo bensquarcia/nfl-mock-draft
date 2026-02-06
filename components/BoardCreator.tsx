@@ -42,7 +42,10 @@ export default function BoardCreator({
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPos = selectedPos === "ALL" || p.position === selectedPos;
     const notRanked = !rankedPlayers.find(rp => rp.id === p.id);
-    return matchesSearch && matchesPos && notRanked;
+    // Logic update: Ensure the player's status is not set to 'inactive'
+    const isActive = p.status !== "inactive";
+    
+    return matchesSearch && matchesPos && notRanked && isActive;
   });
 
   return (
