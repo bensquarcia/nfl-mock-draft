@@ -29,7 +29,7 @@ export default function HomePage() {
       <div className="fixed top-6 right-6 z-[100] flex items-center gap-3">
         {/* REPLACE THE HREF BELOW WITH YOUR ACTUAL X LINK */}
         <Link 
-          href="https://x.com/UpNextDraft" 
+          href="https://x.com/UpNext_Draft" 
           target="_blank"
           rel="noopener noreferrer"
           className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-black hover:text-white hover:shadow-lg transition-all duration-300 group"
