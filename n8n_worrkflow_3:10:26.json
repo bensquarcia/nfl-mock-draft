@@ -1,0 +1,680 @@
+{
+  "name": "Rescued Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "autofill-player",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        384,
+        592
+      ],
+      "id": "c6739649-2e07-4e0d-8c24-6683237e12db",
+      "name": "Webhook",
+      "webhookId": "dceaf5b7-9e56-4e3e-8478-0b92f40c4945"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Research the prospect {{ $json.body.record.name }} from {{ $json.body.record.college }}.\n\nFirst, write a professional scouting report using this exact format:\nOVERVIEW: [3-4 sentences on skillsets, any storylines, and anything else notable about a player included in a scouting report]\nSTRENGTHS:\n• [Bullet 1]\n• [Bullet 2]\n• [Bullet 3]\nWEAKNESSES:\n• [Bullet 1]\n• [Bullet 2]\n• [Bullet 3]\n\nSecond, you MUST provide the specific data fields for this player. \n\nReturn your entire response as a single JSON object with these exact keys:\n\"bio\": (The full scouting report text from above)\n\"ht\": (Height, e.g., \"6'3\\\"\")\n\"wt\": (Weight, number only, e.g., 215)\n\"cls\": (College class, e.g., \"RSR\")\n\"slug\": (Name lowercase with dashes, e.g., \"joe-burrow\")\n\"hometown\": (City, State, e.g., \"Athens, OH\")\n\"position\": (Abbreviation, e.g., \"QB\", for certain positions only do IOL for interior lineman not exact position and DL for any defensive lineman along with EDGE for edge defedners. Each positions should be simpliest abbr)\n\"hs_stars\": (Recruit rating 0-5)\n\"pro_comp\": (NFL player name)\n\"college_logo_url\": (ESPN logo link, e.g., https://a.espncdn.com/i/teamlogos/ncaa/500/[ID].png)\n\nReturn ONLY the raw JSON. No extra text.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        528,
+        592
+      ],
+      "id": "e890cef6-d685-46be-bd31-b3e5c361463c",
+      "name": "AI Agent",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        560,
+        768
+      ],
+      "id": "211475f0-61d1-427f-9ec9-889be2485df7",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "52YLt5QUgggeYqvj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "operation": "update",
+        "tableId": "players",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "=id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').item.json.body.record.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "bio",
+              "fieldValue": "={{ $json.bio }}"
+            },
+            {
+              "fieldId": "ht",
+              "fieldValue": "={{ $json.ht }}"
+            },
+            {
+              "fieldId": "position",
+              "fieldValue": "={{ $json.position }}"
+            },
+            {
+              "fieldId": "wt",
+              "fieldValue": "={{ $json.wt }}"
+            },
+            {
+              "fieldId": "cls",
+              "fieldValue": "={{ $json.cls }}"
+            },
+            {
+              "fieldId": "slug",
+              "fieldValue": "={{ $json.slug }}"
+            },
+            {
+              "fieldId": "pro_comp",
+              "fieldValue": "={{ $json.pro_comp }}"
+            },
+            {
+              "fieldId": "hometown",
+              "fieldValue": "={{ $json.hometown }}"
+            },
+            {
+              "fieldId": "hs_stars",
+              "fieldValue": "={{ $json.hs_stars }}"
+            },
+            {
+              "fieldId": "college_logo_url",
+              "fieldValue": "={{ $json.college_logo_url }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        832,
+        752
+      ],
+      "id": "93b607f7-e382-401a-a1f2-403c64ad1d25",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GgdaGUuq5OqgUsiS",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  try {\n    const raw = item.json.output; \n    const parsed = JSON.parse(raw.replace(/```json|```/g, \"\").trim());\n    Object.assign(item.json, parsed); \n  } catch (e) {\n    item.json.error = \"AI output wasn't clean JSON\";\n  }\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        592
+      ],
+      "id": "0c728ff8-a1b0-4181-a9fe-e36ec6d3a10e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        128,
+        48
+      ],
+      "id": "3d54e9a2-e33e-4399-aff9-6f13b74e7ea2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "players",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "name",
+              "keyValue": "Denzel Boston"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        272,
+        48
+      ],
+      "id": "cf6be7ba-cbaa-446e-a1cc-d80bde46fe38",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GgdaGUuq5OqgUsiS",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = {};\nconst originalPlayerId = $('Get a row').first().json.id;\nconst allStatKeys = new Set(); // To track every unique stat found\n\nconst items = $input.all();\n\n// 1. First pass: Group stats and find all unique column names\nfor (const item of items) {\n  const season = item.json.season;\n  const category = String(item.json.category || 'unknown').toLowerCase();\n  const statType = String(item.json.statType || 'unknown').toLowerCase();\n  const statValue = parseFloat(item.json.stat) || 0;\n  const rawColName = `${category}_${statType}`;\n\n  allStatKeys.add(rawColName);\n\n  if (!results[season]) {\n    results[season] = {\n      player_id: originalPlayerId,\n      season: season,\n      team: item.json.team,\n      player_name: item.json.player\n    };\n  }\n\n  if (results[season].hasOwnProperty(rawColName)) {\n    results[season][rawColName] += statValue;\n  } else {\n    results[season][rawColName] = statValue;\n  }\n}\n\n// 2. Second pass: Normalize! \n// Ensure every season has every key found, otherwise set to 0\nconst finalRows = Object.values(results);\nfor (const row of finalRows) {\n  allStatKeys.forEach(key => {\n    if (!row.hasOwnProperty(key)) {\n      row[key] = 0;\n    }\n  });\n}\n\nreturn finalRows.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        64
+      ],
+      "id": "c522ce7a-bee3-4e97-ac86-cae01694ef5f",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3da58302-7f99-4551-b492-1c719a411a20",
+              "leftValue": "={{ $json.player }}",
+              "rightValue": "={{ $items(\"Get a row\").first().json.name || $items(\"Webhook1\").first().json.body?.record?.name }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1104,
+        64
+      ],
+      "id": "5b3e9973-8495-4fdb-85a9-e62d67700d4f",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.collegefootballdata.com/stats/player/season",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "year",
+              "value": "={{ $json.season }}"
+            },
+            {
+              "name": "team",
+              "value": "={{ $json.team }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer v/9hSyFPDeZskXMtPjwvyVFAdcOcz7hiE0LvmqfoB8js1HBoWmdYNSlkNabAap4l"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        960,
+        64
+      ],
+      "id": "3a29405f-3266-4015-8ed9-94f65abda839",
+      "name": "Stats1",
+      "executeOnce": false,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.collegefootballdata.com/player/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "team",
+              "value": "={{ $json.body.record.college }}"
+            },
+            {
+              "name": "searchTerm",
+              "value": "={{ $json.body?.record?.name || $json.name }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer v/9hSyFPDeZskXMtPjwvyVFAdcOcz7hiE0LvmqfoB8js1HBoWmdYNSlkNabAap4l"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        432,
+        48
+      ],
+      "id": "5803bf0e-10ab-4769-996b-a7bc4f372c1f",
+      "name": "ID1"
+    },
+    {
+      "parameters": {
+        "tableId": "player_stats",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "season",
+              "fieldValue": "={{ $json.season }}"
+            },
+            {
+              "fieldId": "passing_att",
+              "fieldValue": "={{ $json.passing_att }}"
+            },
+            {
+              "fieldId": "passing_cmp",
+              "fieldValue": "={{ $json.passing_completions }}"
+            },
+            {
+              "fieldId": "passing_yds",
+              "fieldValue": "={{ $json.passing_yds }}"
+            },
+            {
+              "fieldId": "passing_td",
+              "fieldValue": "={{ $json.passing_td }}"
+            },
+            {
+              "fieldId": "passing_int",
+              "fieldValue": "={{ $json.passing_int }}"
+            },
+            {
+              "fieldId": "rushing_att",
+              "fieldValue": "={{ $json.rushing_car }}"
+            },
+            {
+              "fieldId": "rushing_yds",
+              "fieldValue": "={{ $json.rushing_yds }}"
+            },
+            {
+              "fieldId": "rushing_td",
+              "fieldValue": "={{ $json.rushing_td }}"
+            },
+            {
+              "fieldId": "receiving_yds",
+              "fieldValue": "={{ $json.receiving_yds }}"
+            },
+            {
+              "fieldId": "receiving_rec",
+              "fieldValue": "={{ $json.receiving_rec }}"
+            },
+            {
+              "fieldId": "receiving_td",
+              "fieldValue": "={{ $json.receiving_td }}"
+            },
+            {
+              "fieldId": "defensive_tkl",
+              "fieldValue": "={{ $json.defensive_tot }}"
+            },
+            {
+              "fieldId": "defensive_solo",
+              "fieldValue": "={{ $json.defensive_solo }}"
+            },
+            {
+              "fieldId": "defensive_tfl",
+              "fieldValue": "={{ $json.defensive_tfl }}"
+            },
+            {
+              "fieldId": "defensive_sack",
+              "fieldValue": "={{ $json.defensive_sacks }}"
+            },
+            {
+              "fieldId": "defensive_int",
+              "fieldValue": "={{ $json.interceptions_int }}"
+            },
+            {
+              "fieldId": "defensive_pd",
+              "fieldValue": "={{ $json.defensive_pd }}"
+            },
+            {
+              "fieldId": "defensive_ff",
+              "fieldValue": "={{ $json.fumbles_rec}}"
+            },
+            {
+              "fieldId": "receiving_ypr",
+              "fieldValue": "={{ $json.receiving_ypr }}"
+            },
+            {
+              "fieldId": "rushing_ypc",
+              "fieldValue": "={{ $json.rushing_ypc }}"
+            },
+            {
+              "fieldId": "defensive_qb_hur",
+              "fieldValue": "={{ $json['defensive_qb hur'] }}"
+            },
+            {
+              "fieldId": "passing_pct",
+              "fieldValue": "={{ $json.passing_pct }}"
+            },
+            {
+              "fieldId": "team",
+              "fieldValue": "={{ $json.team }}"
+            },
+            {
+              "fieldId": "player_id",
+              "fieldValue": "={{ $json.player_id }}"
+            },
+            {
+              "fieldId": "fumbles_fum",
+              "fieldValue": "={{ $json.fumbles_fum }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        80
+      ],
+      "id": "19ca6166-01ea-4872-a33f-a540b6d6c948",
+      "name": "Create a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "GgdaGUuq5OqgUsiS",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This node creates a list of every potential year for every team found.\nconst allItems = $input.all();\nconst currentYear = 2025; \nconst yearsToLookBack = 4; // This will check 2025, 2024, 2023, and 2022\nlet searchTasks = [];\n\nfor (const item of allItems) {\n  const team = item.json.team;\n  const playerName = item.json.name;\n  const playerId = item.json.id;\n\n  for (let i = 0; i < yearsToLookBack; i++) {\n    searchTasks.push({\n      json: {\n        player_name: playerName,\n        team: team,\n        season: currentYear - i,\n        original_id: playerId // Keeping your Supabase ID safe\n      }\n    });\n  }\n}\n\nreturn searchTasks;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        64
+      ],
+      "id": "0d0d5ceb-8dec-4a75-8d85-a82d5de69fb6",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e445074b-4e1d-45fe-8a30-50597da34bf8",
+              "leftValue": "={{ $json.position }}",
+              "rightValue": "={{ $item(0).$node[\"Get a row\"].json.position }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        64
+      ],
+      "id": "0e5ff2f3-8a9f-4a6c-a758-78d8e00577fa",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "91a9001b-82d2-40c6-8d1c-f9ad283c2aca",
+              "leftValue": "player_id",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1440,
+        64
+      ],
+      "id": "4d63e2d8-35f3-40a3-bd38-bcaf21fea683",
+      "name": "Filter2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "ID1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Filter2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stats1": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ID1": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row1": {
+      "main": [
+        []
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Stats1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter2": {
+      "main": [
+        [
+          {
+            "node": "Create a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveManualExecutions": false
+  },
+  "versionId": "f4609dcb-a320-44f9-96b3-10c2e1746e3b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f7c32b45a92b03e6e4951bf6f67e199a9ff9e0e915f97dcedb7fd0c339d5e28b"
+  },
+  "id": "MtectXIWfZVzBy7B24uY1",
+  "tags": []
+}
