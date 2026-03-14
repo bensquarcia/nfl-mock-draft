@@ -21,7 +21,7 @@ export default function Home() {
     handleUndo, handleConfirmTrade,
     isPaused, togglePause,
     controlledTeams,
-    draftSpeed, cycleSpeed // Destructured from the hook
+    draftSpeed, cycleSpeed 
   } = useDraftLogic();
 
   const [viewingPlayer, setViewingPlayer] = useState<Player | null>(null);
@@ -60,7 +60,6 @@ export default function Home() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [viewingPlayer, isTradeModalOpen]);
 
-  // Helper to get the current speed label
   const getSpeedLabel = () => {
     if (draftSpeed === 600) return "Normal";
     if (draftSpeed === 300) return "Fast";
@@ -109,26 +108,28 @@ export default function Home() {
           </div>
 
           <div className="flex gap-1.5 md:gap-3">
-            {/* SPEED TOGGLE BUTTON */}
-            <button 
-              onClick={cycleSpeed}
-              className="bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] hover:bg-white hover:shadow-md transition-all active:scale-95 flex items-center gap-2"
-            >
-              <Zap size={10} className={draftSpeed < 600 ? "text-amber-500 fill-amber-500" : ""} />
-              <span>Speed: {getSpeedLabel()}</span>
-            </button>
-
+            {/* ONLY SHOW SPEED AND PAUSE IF NOT CONTROLLING ALL TEAMS */}
             {!isControllingAllTeams && (
-              <button 
-                onClick={togglePause}
-                className={`px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] transition-all shadow-md active:scale-95 flex items-center gap-2 ${
-                  isPaused 
-                    ? "bg-emerald-500 text-white animate-pulse" 
-                    : "bg-slate-100 text-slate-600 border border-slate-200"
-                }`}
-              >
-                {isPaused ? "▶ Resume" : "⏸ Pause"}
-              </button>
+              <>
+                <button 
+                  onClick={cycleSpeed}
+                  className="bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] hover:bg-white hover:shadow-md transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <Zap size={10} className={draftSpeed < 600 ? "text-amber-500 fill-amber-500" : ""} />
+                  <span>Speed: {getSpeedLabel()}</span>
+                </button>
+
+                <button 
+                  onClick={togglePause}
+                  className={`px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] transition-all shadow-md active:scale-95 flex items-center gap-2 ${
+                    isPaused 
+                      ? "bg-emerald-500 text-white animate-pulse" 
+                      : "bg-slate-100 text-slate-600 border border-slate-200"
+                  }`}
+                >
+                  {isPaused ? "▶ Resume" : "⏸ Pause"}
+                </button>
+              </>
             )}
 
             <button 
