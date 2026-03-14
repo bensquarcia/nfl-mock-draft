@@ -191,6 +191,9 @@ export default function PlayerProfile({ player, staticRank, onClose }: PlayerPro
     });
   };
 
+  // Helper to check if we should show the stats section
+  const showStats = ['QB', 'RB', 'WR', 'TE', 'LB', 'EDGE', 'DL', 'CB', 'S'].includes(player.position?.toUpperCase() || '');
+
   return (
     <div className="fixed inset-0 z-[100] bg-white text-slate-900 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="max-w-5xl mx-auto p-8">
@@ -295,15 +298,18 @@ export default function PlayerProfile({ player, staticRank, onClose }: PlayerPro
           </div>
         </div>
 
-        <div className="mt-16 pb-20">
-          <h3 className="text-slate-900 font-black uppercase text-xl tracking-tighter italic mb-4">
-            Collegiate Production <span className="text-blue-600 ml-2">History</span>
-          </h3>
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">
-            Verified stats via CFB Data API
-          </p>
-          {renderStatsTable()}
-        </div>
+        {/* Updated Stats Section - Only shows for specific positions */}
+        {showStats && (
+          <div className="mt-16 pb-20">
+            <h3 className="text-slate-900 font-black uppercase text-xl tracking-tighter italic mb-4">
+              Collegiate Production <span className="text-blue-600 ml-2">History</span>
+            </h3>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">
+              Verified stats via CFB Data API
+            </p>
+            {renderStatsTable()}
+          </div>
+        )}
       </div>
     </div>
   );

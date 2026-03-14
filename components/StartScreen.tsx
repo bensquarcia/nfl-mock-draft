@@ -1,4 +1,3 @@
-// src/components/StartScreen.tsx
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -84,16 +83,16 @@ export default function StartScreen({ onStart }: StartScreenProps) {
   );
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 pt-24 relative overflow-hidden">
+    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 md:p-8 pt-24 relative overflow-hidden">
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/30 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-100/30 rounded-full blur-[120px]" />
 
       <UnifiedHeader />
 
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 items-stretch">
         
         {/* LEFT COLUMN: TEAM SELECTION */}
-        <div className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-xl flex flex-col">
+        <div className="bg-white p-6 md:p-8 rounded-[40px] border border-slate-200 shadow-xl flex flex-col h-full">
           <div className="flex items-center justify-between mb-6">
             <div className="space-y-1">
               <p className="text-slate-900 font-black uppercase tracking-[0.2em] text-[10px]">Select Teams to Control</p>
@@ -106,32 +105,40 @@ export default function StartScreen({ onStart }: StartScreenProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-            {NFL_TEAMS.map(team => (
-              <button
-                key={team}
-                onClick={() => toggleTeam(team)}
-                className={`flex items-center justify-center p-3 rounded-xl border transition-all text-center ${
-                  selectedTeams.includes(team) 
-                    ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200" 
-                    : "bg-white border-slate-100 text-slate-600 hover:border-slate-300"
-                }`}
-              >
-                <span className="text-[11px] font-black uppercase tracking-tight">
-                  {TEAM_DATA[team].abbr}
-                </span>
-              </button>
-            ))}
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 flex-grow">
+            {NFL_TEAMS.map(team => {
+              const abbr = TEAM_DATA[team].abbr;
+              const logoUrl = `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png`;
+
+              return (
+                <button
+                  key={team}
+                  onClick={() => toggleTeam(team)}
+                  className={`flex items-center gap-2 p-1.5 rounded-xl border transition-all ${
+                    selectedTeams.includes(team) 
+                      ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200" 
+                      : "bg-white border-slate-100 text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="relative w-8 h-8 md:w-10 md:h-10 shrink-0 flex items-center justify-center">
+                    <img src={logoUrl} alt="" className="w-full h-full object-contain" />
+                  </div>
+                  <span className="text-[10px] md:text-[11px] font-black uppercase tracking-tight">
+                    {abbr}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* RIGHT COLUMN: DRAFT SETTINGS */}
-        <div className="bg-white p-12 rounded-[40px] border border-slate-200 shadow-xl text-center flex flex-col justify-center space-y-10">
+        <div className="bg-white p-8 md:p-12 rounded-[40px] border border-slate-200 shadow-xl text-center flex flex-col justify-center space-y-8 md:space-y-10 h-full">
           <div className="space-y-3">
             <div className="inline-block px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-2">
               2026 Draft Class
             </div>
-            <h1 className="text-4xl font-black italic tracking-tighter uppercase text-slate-900 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-black italic tracking-tighter uppercase text-slate-900 leading-tight">
               Ready to <span className="text-blue-600 underline decoration-blue-100 decoration-8 underline-offset-[-2px]">Start</span> Your Draft?
             </h1>
           </div>
