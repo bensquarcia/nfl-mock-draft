@@ -3,6 +3,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Trophy, LayoutList, ChevronRight } from 'lucide-react';
 
+// List of all NFL abbreviations for the background grid
+const TEAM_ABBRS = [
+  "ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE",
+  "DAL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC",
+  "LV", "LAC", "LAR", "MIA", "MIN", "NE", "NO", "NYG",
+  "NYJ", "PHI", "PIT", "SF", "SEA", "TB", "TEN", "WAS"
+];
+
 export default function HomePage() {
   const tools = [
     {
@@ -23,11 +31,45 @@ export default function HomePage() {
     }
   ];
 
+  // Logic to shuffle the teams so every row is completely different
+  const getShuffledRow = (seed: number) => {
+    return [...TEAM_ABBRS].sort(() => Math.sin(seed) - 0.5);
+  };
+
+  const TeamBackground = () => (
+    <div className="absolute inset-0 z-0 pointer-events-none opacity-40 overflow-hidden flex flex-col gap-10 py-12">
+      {[...Array(12)].map((_, rowIndex) => {
+        // Create a unique team order for this specific row
+        const rowTeams = [...getShuffledRow(rowIndex * 555), ...getShuffledRow(rowIndex * 999)];
+        
+        return (
+          <div 
+            key={rowIndex} 
+            className={`flex gap-14 whitespace-nowrap ${
+              rowIndex % 2 === 0 ? 'translate-x-[-40px]' : 'translate-x-[20px]'
+            }`}
+          >
+            {rowTeams.map((abbr, i) => (
+              <img
+                key={`${abbr}-${rowIndex}-${i}`}
+                src={`https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png`}
+                alt=""
+                className="w-14 h-14 grayscale opacity-[0.12] object-contain shrink-0"
+              />
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      {/* Randomized Team Logo Background */}
+      <TeamBackground />
+
       {/* Social Links - Fixed Top Right */}
       <div className="fixed top-6 right-6 z-[100] flex items-center gap-3">
-        {/* REPLACE THE HREF BELOW WITH YOUR ACTUAL X LINK */}
         <Link 
           href="https://x.com/UpNext_Draft" 
           target="_blank"
@@ -39,7 +81,6 @@ export default function HomePage() {
           </svg>
         </Link>
         
-        {/* REPLACE THE HREF BELOW WITH YOUR ACTUAL REDDIT LINK */}
         <Link 
           href="https://www.reddit.com/user/UpNext_Draft_Network/" 
           target="_blank"
@@ -52,9 +93,9 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {/* Subtle Background Decoration */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-100/40 rounded-full blur-[120px] pointer-events-none" />
+      {/* Subtle Blue/Indigo Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none z-1" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-100/40 rounded-full blur-[120px] pointer-events-none z-1" />
 
       {/* CLEAN BRANDED HEADER */}
       <header className="text-center mb-20 relative z-10 flex flex-col items-center">
@@ -88,7 +129,7 @@ export default function HomePage() {
           <Link 
             key={tool.title} 
             href={tool.link}
-            className="group relative p-10 rounded-[3rem] border bg-white transition-all shadow-sm flex flex-col hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 active:scale-[0.98] border-slate-200"
+            className="group relative p-10 rounded-[3rem] border bg-white/90 backdrop-blur-sm transition-all shadow-sm flex flex-col hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 active:scale-[0.98] border-slate-200"
           >
             <div className="mb-8 p-5 rounded-[1.5rem] inline-block self-start transition-all duration-300 bg-blue-50 text-blue-600 group-hover:bg-slate-900 group-hover:text-white group-hover:rotate-6 shadow-sm">
               {tool.icon}
@@ -114,7 +155,7 @@ export default function HomePage() {
         ))}
       </div>
 
-      <footer className="mt-24 flex flex-col items-center gap-4">
+      <footer className="mt-24 flex flex-col items-center gap-4 relative z-10">
         <div className="flex items-center gap-3">
             <div className="h-px w-8 bg-slate-200" />
             <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />

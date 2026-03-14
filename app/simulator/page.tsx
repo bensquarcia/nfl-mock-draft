@@ -1,8 +1,9 @@
-// src/app/simulator/page.tsx
 "use client";
 import { useEffect, useState, useMemo } from 'react'; 
 import Link from 'next/link';
 import Image from 'next/image';
+// Added Info icon to the imports
+import { Trophy, LayoutList, ChevronRight, Info } from 'lucide-react';
 import { useDraftLogic } from '@/hooks/useDraftLogic';
 import StartScreen from '@/components/StartScreen';
 import ResultsScreen from '@/components/ResultsScreen';
@@ -20,15 +21,13 @@ export default function Home() {
     startDraft, resetDraft, handleDraftPlayer,
     handleUndo, handleConfirmTrade,
     isPaused, togglePause,
-    controlledTeams // Get this from the hook to check the count
+    controlledTeams 
   } = useDraftLogic();
 
   const [viewingPlayer, setViewingPlayer] = useState<Player | null>(null);
 
-  // Check if user is controlling the whole league
   const isControllingAllTeams = controlledTeams.length === 32;
 
-  // --- STATIC RANKING LOGIC ---
   const masterBoardMap = useMemo(() => {
     if (loading) return new Map();
     const allPlayers = [...players, ...draftedPlayers].sort((a, b) => a.rank - b.rank);
@@ -79,7 +78,6 @@ export default function Home() {
   return (
     <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       
-      {/* HIDE NAV ON RESULTS SCREEN */}
       {gameState !== "RESULTS" && (
         <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white border-b border-slate-100 shadow-sm">
           <div className="flex items-center gap-2 md:gap-4">
