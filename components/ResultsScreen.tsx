@@ -59,10 +59,10 @@ export default function ResultsScreen({ draftedPlayers, draftOrder, maxRounds, o
             </div>
           </div>
 
-          {/* LIST: COMPACT FOR NO-SCROLL SCREENSHOTS */}
-          <div className="flex-grow grid grid-cols-1 md:grid-cols-2 bg-white overflow-hidden">
+          {/* LIST: SCROLLABLE ONLY IF MORE THAN 14 PICKS (7 ROWS) */}
+          <div className={`flex-grow grid grid-cols-1 md:grid-cols-2 bg-white ${userPicks.length > 14 ? 'overflow-y-auto no-scrollbar' : 'overflow-hidden'}`}>
             {userPicks.map((pick) => (
-              <div key={pick.id} className="flex items-center px-4 md:px-8 py-2 md:py-4 gap-3 md:gap-6 border-b border-r border-slate-50">
+              <div key={pick.id} className="flex items-center px-4 md:px-8 py-2 md:py-3.5 gap-3 md:gap-6 border-b border-r border-slate-50">
                 <div className="flex flex-col items-center justify-center w-10 md:w-14 shrink-0 border-r border-slate-100 pr-2 md:pr-4">
                   <span className="text-[7px] md:text-[10px] font-black text-blue-600 uppercase">RD {pick.round}</span>
                   <span className="text-lg md:text-3xl font-black italic text-slate-900">#{pick.pick_number}</span>
@@ -79,7 +79,6 @@ export default function ResultsScreen({ draftedPlayers, draftOrder, maxRounds, o
                   </div>
                 </div>
 
-                {/* COLLEGE LOGO - VIBRANT COLORS ONLY IN SINGLE VIEW */}
                 {pick.player?.college_logo_url && (
                   <div className="w-6 h-6 md:w-12 md:h-12 flex items-center justify-center shrink-0">
                     <img src={pick.player.college_logo_url} alt="college" className="max-w-full max-h-full object-contain drop-shadow-sm transition-transform hover:scale-110" />
@@ -93,7 +92,6 @@ export default function ResultsScreen({ draftedPlayers, draftOrder, maxRounds, o
           <div className="p-4 md:p-6 flex flex-wrap justify-between items-center shrink-0 border-t border-slate-100 gap-4">
             <div className="flex items-center gap-4">
               <p className="text-slate-900 text-lg md:text-2xl font-black italic uppercase tracking-tighter leading-none">UpNextSports</p>
-              {/* Removed 'hidden md:block' so it shows on mobile now */}
               <button onClick={onReset} className="bg-slate-900 text-white px-4 py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">New Simulation</button>
             </div>
             <p className="text-blue-600 text-sm md:text-xl font-black uppercase italic tracking-tighter leading-none">UPNEXTDRAFT.COM</p>
@@ -103,7 +101,6 @@ export default function ResultsScreen({ draftedPlayers, draftOrder, maxRounds, o
     );
   }
 
-  {/* Full Board View remains the same... */}
   return (
     <main className="h-screen bg-white p-2 md:p-4 flex flex-col items-center justify-center overflow-hidden">
       <div className="w-full max-w-[1600px] h-full flex flex-col">
