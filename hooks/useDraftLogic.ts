@@ -12,6 +12,7 @@ export function useDraftLogic() {
   const [maxRounds, setMaxRounds] = useState(1);
   const [controlledTeams, setControlledTeams] = useState<string[]>([]);
   const [isPaused, setIsPaused] = useState(false); 
+  const [draftSpeed, setDraftSpeed] = useState(600); // New: Speed state
   const [players, setPlayers] = useState<Player[]>([]);
   const [originalPlayers, setOriginalPlayers] = useState<Player[]>([]); 
   const [draftOrder, setDraftOrder] = useState<DraftSlot[]>([]);
@@ -25,10 +26,8 @@ export function useDraftLogic() {
 
   const [selectedPlayerForInfo, setSelectedPlayerForInfo] = useState<Player | null>(null);
 
-  // --- AUTODRAFT ENGINE (UPDATED WITH RESUME & TRADE-PAUSE LOGIC) ---
+  // --- AUTODRAFT ENGINE ---
   useEffect(() => {
-    // This condition ensures the draft stays paused if the user is trading 
-    // or if they manually hit the pause/resume button.
     if (gameState !== "DRAFT" || loading || isPaused || isTradeModalOpen) return;
 
     const currentPick = draftOrder[draftedPlayers.length];
@@ -40,11 +39,20 @@ export function useDraftLogic() {
       const timer = setTimeout(() => {
         const cpuPick = getBestAutodraftPick(players, currentPick);
         handleDraftPlayer(cpuPick);
-      }, 600); 
+      }, draftSpeed); // Updated to use dynamic speed
 
       return () => clearTimeout(timer);
     }
-  }, [draftedPlayers.length, gameState, controlledTeams, players, draftOrder, loading, isPaused, isTradeModalOpen]);
+  }, [draftedPlayers.length, gameState, controlledTeams, players, draftOrder, loading, isPaused, isTradeModalOpen, draftSpeed]);
+
+  // Speed Toggle Logic
+  const cycleSpeed = () => {
+    setDraftSpeed(prev => {
+      if (prev === 600) return 300; // Fast
+      if (prev === 300) return 50;  // Sim
+      return 600;                   // Normal
+    });
+  };
 
   const openPlayerInfo = (player: Player) => {
     setSelectedPlayerForInfo(player);
@@ -133,7 +141,6 @@ export function useDraftLogic() {
     setControlledTeams(teams); 
     setIsPaused(true); 
     
-    // CHANGE: Update draftOrder to flag which slots belong to the user
     setDraftOrder(prev => prev.map(slot => ({
       ...slot,
       isUser: teams.includes(slot.current_team_name)
@@ -157,9 +164,9 @@ export function useDraftLogic() {
     setSearchQuery("");
     setControlledTeams([]);
     setIsPaused(false);
+    setDraftSpeed(600); // Reset speed on reset
   };
 
-  // Helper function to be called by your UI button
   const togglePause = () => setIsPaused(!isPaused); 
 
   const filteredPlayers = players.filter(p => {
@@ -244,6 +251,7 @@ export function useDraftLogic() {
     handleUndo, handleConfirmTrade,
     selectedPlayerForInfo, openPlayerInfo,
     controlledTeams,
-    isPaused, togglePause 
+    isPaused, togglePause,
+    draftSpeed, cycleSpeed // Exported new states
   };
 }

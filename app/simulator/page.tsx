@@ -2,8 +2,7 @@
 import { useEffect, useState, useMemo } from 'react'; 
 import Link from 'next/link';
 import Image from 'next/image';
-// Added Info icon to the imports
-import { Trophy, LayoutList, ChevronRight, Info } from 'lucide-react';
+import { Trophy, LayoutList, ChevronRight, Info, Zap } from 'lucide-react';
 import { useDraftLogic } from '@/hooks/useDraftLogic';
 import StartScreen from '@/components/StartScreen';
 import ResultsScreen from '@/components/ResultsScreen';
@@ -21,7 +20,8 @@ export default function Home() {
     startDraft, resetDraft, handleDraftPlayer,
     handleUndo, handleConfirmTrade,
     isPaused, togglePause,
-    controlledTeams 
+    controlledTeams,
+    draftSpeed, cycleSpeed // Destructured from the hook
   } = useDraftLogic();
 
   const [viewingPlayer, setViewingPlayer] = useState<Player | null>(null);
@@ -59,6 +59,13 @@ export default function Home() {
     }
     return () => window.removeEventListener('popstate', handlePopState);
   }, [viewingPlayer, isTradeModalOpen]);
+
+  // Helper to get the current speed label
+  const getSpeedLabel = () => {
+    if (draftSpeed === 600) return "Normal";
+    if (draftSpeed === 300) return "Fast";
+    return "Turbo";
+  };
 
   if (loading) return (
     <main className="h-screen bg-white flex items-center justify-center">
@@ -102,6 +109,15 @@ export default function Home() {
           </div>
 
           <div className="flex gap-1.5 md:gap-3">
+            {/* SPEED TOGGLE BUTTON */}
+            <button 
+              onClick={cycleSpeed}
+              className="bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg md:rounded-xl font-black uppercase text-[9px] hover:bg-white hover:shadow-md transition-all active:scale-95 flex items-center gap-2"
+            >
+              <Zap size={10} className={draftSpeed < 600 ? "text-amber-500 fill-amber-500" : ""} />
+              <span>Speed: {getSpeedLabel()}</span>
+            </button>
+
             {!isControllingAllTeams && (
               <button 
                 onClick={togglePause}
