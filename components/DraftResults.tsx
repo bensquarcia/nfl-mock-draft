@@ -14,7 +14,7 @@ export default function DraftResults({ draftOrder, draftedPlayers, onSelectTeam 
   const currentPickRef = useRef<HTMLDivElement>(null);
   const roundRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-  const roundsInDraft = Array.from(new Set(draftOrder.filter(p => !p.year || p.year === 2025).map(p => p.round))).sort((a, b) => a - b);
+  const roundsInDraft = Array.from(new Set(draftOrder.filter(p => !p.year || p.year === 2026).map(p => p.round))).sort((a, b) => a - b);
 
   // AUTO-SCROLL TO CURRENT PICK ON LOAD/DRAFT
   useEffect(() => {
@@ -32,13 +32,22 @@ export default function DraftResults({ draftOrder, draftedPlayers, onSelectTeam 
   };
 
   // MANIFEST DATA
-  const teamPicks = draftedPlayers.filter((_, idx) => draftOrder[idx]?.current_team_name === manifestTeam);
-  // Fixed Future Picks Filter: Looks for picks belonging to this team in years 2026+
-  const futurePicks = draftOrder.filter(p => 
+  // Filters for players ALREADY picked by this team in 2026
+  const teamManifestPicks = draftOrder
+    .map((slot, idx) => ({ slot, player: draftedPlayers[idx] }))
+    .filter(item => 
+      item.slot.current_team_name === manifestTeam && 
+      (!item.slot.year || item.slot.year === 2026) && 
+      item.player
+    );
+  
+  // Future Assets: ONLY 2026 picks that have NOT been drafted yet
+  const futurePicks = draftOrder.filter((p, idx) => 
     p.current_team_name === manifestTeam && 
-    p.year && 
-    p.year > 2025
+    (!p.year || p.year === 2026) &&
+    idx >= draftedPlayers.length
   );
+
   const teamLogo = draftOrder.find(p => p.current_team_name === manifestTeam)?.team_logo_url;
 
   return (
@@ -61,24 +70,24 @@ export default function DraftResults({ draftOrder, draftedPlayers, onSelectTeam 
             <div>
               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">2026 Draft Class</p>
               <div className="space-y-2">
-                {teamPicks.length > 0 ? teamPicks.map((p, i) => (
+                {teamManifestPicks.length > 0 ? teamManifestPicks.map((item, i) => (
                   <div key={i} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="font-black text-xs uppercase text-slate-900 leading-tight">{p.name}</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">{p.position} | {p.college}</p>
+                    <p className="font-black text-xs uppercase text-slate-900 leading-tight">{item.player?.name}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">{item.player?.position} | {item.player?.college} (Pick #{item.slot.slot_number})</p>
                   </div>
                 )) : <p className="text-center py-6 border-2 border-dashed border-slate-50 rounded-2xl text-[10px] font-bold text-slate-300 uppercase">No selections yet</p>}
               </div>
             </div>
 
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Future Assets</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Future Assets (2026)</p>
               <div className="grid grid-cols-1 gap-2">
                 {futurePicks.length > 0 ? futurePicks.map((p, i) => (
                   <div key={i} className="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center">
-                    <p className="font-black text-[10px] text-slate-900 uppercase">{p.year} Draft Pick</p>
-                    <span className="bg-slate-900 text-white text-[9px] font-black px-2 py-1 rounded">RD {p.round}</span>
+                    <p className="font-black text-[10px] text-slate-900 uppercase">Round {p.round} Pick</p>
+                    <span className="bg-slate-900 text-white text-[9px] font-black px-2 py-1 rounded">#{p.slot_number}</span>
                   </div>
-                )) : <p className="text-center py-6 border-2 border-dashed border-slate-50 rounded-2xl text-[10px] font-bold text-slate-300 uppercase">No future picks found</p>}
+                )) : <p className="text-center py-6 border-2 border-dashed border-slate-50 rounded-2xl text-[10px] font-bold text-slate-300 uppercase">No upcoming picks</p>}
               </div>
             </div>
           </div>
@@ -107,7 +116,7 @@ export default function DraftResults({ draftOrder, draftedPlayers, onSelectTeam 
         ref={scrollContainerRef}
         className="flex-grow overflow-y-auto pr-2 custom-scrollbar scroll-smooth space-y-3"
       >
-        {draftOrder.filter(p => !p.year || p.year === 2025).map((slot, index) => {
+        {draftOrder.filter(p => !p.year || p.year === 2026).map((slot, index) => {
           const isCurrent = draftedPlayers.length === index;
           const playerPicked = draftedPlayers[index];
           

@@ -6,7 +6,7 @@ import { useState } from 'react';
 const getPickValue = (pick: DraftSlot) => {
   if ((pick as any).isCustomPlayer) return (pick as any).value || 0;
 
-  if (pick.year && pick.year > 2025) {
+  if (pick.year && pick.year > 2026) {
     const futureRoundValues = [0, 600, 200, 75, 40, 20, 10, 5];
     return futureRoundValues[pick.round] || 0;
   }
@@ -25,6 +25,14 @@ const getPickValue = (pick: DraftSlot) => {
   return 5;
 };
 
+const getValueLabel = (val: number) => {
+    if (val >= 2500) return "Generational Cornerstone";
+    if (val >= 1000) return "Elite Star Player";
+    if (val >= 500) return "High-Impact Starter";
+    if (val >= 100) return "Solid Starter";
+    return "Depth/Developmental";
+};
+
 interface TradeModalProps {
   userTeam: string;
   allPicks: DraftSlot[];
@@ -36,7 +44,7 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
   const [selectedCpuTeam, setSelectedCpuTeam] = useState('');
   const [userSelectedPicks, setUserSelectedPicks] = useState<DraftSlot[]>([]);
   const [cpuSelectedPicks, setCpuSelectedPicks] = useState<DraftSlot[]>([]);
-  const [activeYear, setActiveYear] = useState<number>(2025);
+  const [activeYear, setActiveYear] = useState<number>(2026);
 
   const [showBuilder, setShowBuilder] = useState(false);
   const [customName, setCustomName] = useState("");
@@ -51,12 +59,30 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
   const isFair = fairnessRatio >= 0.85 && fairnessRatio <= 1.25;
 
   const teams = Array.from(new Set(allPicks.map(p => p.current_team_name))).filter(t => t !== userTeam).sort();
-  const userPicks = allPicks.filter(p => p.current_team_name === userTeam && (p.year || 2025) === activeYear);
-  const cpuPicks = allPicks.filter(p => p.current_team_name === selectedCpuTeam && (p.year || 2025) === activeYear);
+  
+  // Helper to ensure 2027/2028 picks exist even if not in the database
+  const getPicksForTeam = (teamName: string, year: number) => {
+    const existing = allPicks.filter(p => p.current_team_name === teamName && (p.year || 2026) === year);
+    if (existing.length > 0 || year === 2026) return existing;
+
+    // Generate placeholder future picks if the data doesn't exist for 2027/2028
+    return [1, 2, 3, 4, 5, 6, 7].map(round => ({
+        id: Math.random(),
+        year: year,
+        round: round,
+        slot_number: 0,
+        current_team_name: teamName,
+        team_name: teamName,
+        team_abbr: ""
+    } as DraftSlot));
+  };
+
+  const userPicks = getPicksForTeam(userTeam, activeYear);
+  const cpuPicks = getPicksForTeam(selectedCpuTeam, activeYear);
 
   const getPickId = (pick: DraftSlot) => {
     if ((pick as any).isCustomPlayer) return `custom-${(pick as any).customId}`;
-    return `${pick.year || 2025}-${pick.round}-${pick.slot_number}`;
+    return `${pick.year || 2026}-${pick.round}-${pick.slot_number || 0}-${pick.id}`;
   };
 
   const handleAddCustomPlayer = () => {
@@ -106,7 +132,7 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
               <h2 className="text-xl md:text-2xl font-black italic uppercase text-slate-900 tracking-tighter">Trade <span className="text-blue-600">Machine</span></h2>
             </div>
             <div className="flex gap-1.5 mt-3">
-              {[2025, 2026, 2027].map(year => (
+              {[2026, 2027, 2028].map(year => (
                 <button
                   key={year}
                   onClick={() => setActiveYear(year)}
@@ -155,7 +181,10 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
 
                 <div className="space-y-6 py-4 shrink-0">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-black uppercase text-slate-400 tracking-wider">Jimmy Johnson Value</label>
+                    <div className="flex flex-col">
+                        <label className="text-xs font-black uppercase text-slate-400 tracking-wider">Value Assessment</label>
+                        <span className="text-[10px] font-black text-blue-600 uppercase italic">{getValueLabel(customVal)}</span>
+                    </div>
                     <span className="text-blue-600 font-black text-3xl italic tracking-tighter">{customVal} PTS</span>
                   </div>
                   <input 
@@ -164,21 +193,6 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
                     onChange={(e) => setCustomVal(parseInt(e.target.value))}
                     className="w-full h-3 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600"
                   />
-                  
-                  <div className="flex justify-between items-start gap-4 px-1">
-                    <div className="flex-1">
-                      <p className="text-[11px] font-black text-slate-900 uppercase">500 Pts</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase italic leading-tight">Solid Starter</p>
-                    </div>
-                    <div className="flex-1 text-center">
-                      <p className="text-[11px] font-black text-slate-900 uppercase">1500 Pts</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase italic leading-tight">Pro Bowl Talent</p>
-                    </div>
-                    <div className="flex-1 text-right">
-                      <p className="text-[11px] font-black text-slate-900 uppercase">2500+ Pts</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase italic leading-tight">Cornerstone</p>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-3 pt-2 shrink-0">
@@ -208,7 +222,7 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
                 <div key={getPickId(pick)} onClick={() => togglePick(pick, true)} className="p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center bg-emerald-600 border-emerald-600 shadow-md">
                    <div>
                       <p className="font-black text-xs uppercase text-white">{(pick as any).team_abbr} | {(pick as any).team_name}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-tight text-emerald-100 italic">Custom Player • {(pick as any).value} Pts</p>
+                      <p className="text-[10px] font-bold uppercase tracking-tight text-emerald-100 italic">{getValueLabel((pick as any).value)}</p>
                    </div>
                 </div>
               ))}
@@ -218,10 +232,10 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
                   onClick={() => togglePick(pick, true)}
                   className={`p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center ${userSelectedPicks.some(p => getPickId(p) === getPickId(pick)) ? 'bg-blue-600 border-blue-600 shadow-md text-white' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
                 >
-                  <div>
+                  <div className="flex flex-col">
                     <p className={`font-black text-xs uppercase`}>Round {pick.round}</p>
                     <p className={`text-[10px] font-bold uppercase tracking-tight opacity-70`}>
-                      {pick.year && pick.year > 2025 ? `${pick.year} Future Pick` : `Pick #${pick.slot_number}`}
+                      {pick.year && pick.year > 2026 ? `${pick.year} Future Pick` : `Pick #${pick.slot_number}`}
                     </p>
                   </div>
                 </div>
@@ -260,7 +274,7 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
                     <div key={getPickId(pick)} onClick={() => togglePick(pick, false)} className="p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center bg-emerald-600 border-emerald-600 shadow-md">
                       <div>
                           <p className="font-black text-xs uppercase text-white">{(pick as any).team_abbr} | {(pick as any).team_name}</p>
-                          <p className="text-[10px] font-bold uppercase tracking-tight text-emerald-100 italic">Custom Player • {(pick as any).value} Pts</p>
+                          <p className="text-[10px] font-bold uppercase tracking-tight text-emerald-100 italic">{getValueLabel((pick as any).value)}</p>
                       </div>
                     </div>
                   ))}
@@ -270,10 +284,10 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
                       onClick={() => togglePick(pick, false)}
                       className={`p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center ${cpuSelectedPicks.some(p => getPickId(p) === getPickId(pick)) ? 'bg-blue-600 border-blue-600 shadow-md text-white' : 'bg-white border-slate-200 hover:border-slate-300'}`}
                     >
-                      <div>
+                      <div className="flex flex-col">
                         <p className={`font-black text-xs uppercase`}>Round {pick.round}</p>
                         <p className={`text-[10px] font-bold uppercase tracking-tight opacity-70`}>
-                          {pick.year && pick.year > 2025 ? `${pick.year} Future Pick` : `Pick #${pick.slot_number}`}
+                          {pick.year && pick.year > 2026 ? `${pick.year} Future Pick` : `Pick #${pick.slot_number}`}
                         </p>
                       </div>
                     </div>

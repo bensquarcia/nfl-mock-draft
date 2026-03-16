@@ -1,7 +1,7 @@
-// src/hooks/useDraftLogic.ts
+"use client";
+import { Player, DraftSlot } from '@/types/draft';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Player, DraftSlot } from '@/types/draft';
 import { getBestAutodraftPick } from '@/lib/draftUtils';
 
 type GameState = "START" | "DRAFT" | "RESULTS";
@@ -178,6 +178,29 @@ export function useDraftLogic() {
   const handleDraftPlayer = (player: Player) => {
     const totalPicks = draftOrder.filter(p => p.round <= maxRounds && (!p.year || p.year === 2025)).length;
     if (draftedPlayers.length < totalPicks) {
+      const currentPickIndex = draftedPlayers.length;
+      const currentSlot = draftOrder[currentPickIndex];
+      const teamName = currentSlot.current_team_name;
+
+      // UPDATE TEAM NEEDS LOGIC
+      let updatedNeeds = [...(currentSlot.needs || [])];
+      if (player.position === "QB") {
+        // Exception: Remove QB from list entirely
+        updatedNeeds = updatedNeeds.filter(n => n !== "QB");
+      } else if (updatedNeeds.includes(player.position)) {
+        // Reorder: Move drafted position to the back
+        const filtered = updatedNeeds.filter(n => n !== player.position);
+        updatedNeeds = [...filtered, player.position];
+      }
+
+      // Update all remaining picks for this team in the draft order
+      setDraftOrder(prev => prev.map((slot, idx) => {
+        if (idx >= currentPickIndex && slot.current_team_name === teamName) {
+          return { ...slot, needs: updatedNeeds };
+        }
+        return slot;
+      }));
+
       const nextDrafted = [...draftedPlayers, player];
       setHistory([...history, { drafted: draftedPlayers, pool: players }]);
       setDraftedPlayers(nextDrafted);
@@ -201,8 +224,8 @@ export function useDraftLogic() {
     const activePickIndex = draftedPlayers.length;
     const activeTeamName = draftOrder.filter(p => !p.year || p.year === 2025)[activePickIndex]?.current_team_name;
 
-    const cpuTeamRef = draftOrder.find(p => p.team_name === cpuTeam);
-    const userTeamRef = draftOrder.find(p => p.team_name === activeTeamName);
+    const cpuTeamRef = draftOrder.find(p => p.current_team_name === cpuTeam);
+    const userTeamRef = draftOrder.find(p => p.current_team_name === activeTeamName);
 
     const cpuLogo = cpuTeamRef?.team_logo_url || "";
     const userLogo = userTeamRef?.team_logo_url || "";
