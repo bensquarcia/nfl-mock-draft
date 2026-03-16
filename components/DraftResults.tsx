@@ -95,20 +95,25 @@ export default function DraftResults({ draftOrder, draftedPlayers, onSelectTeam 
       )}
 
       {/* 2. SIDEBAR HEADER */}
-      <div className="flex justify-between items-center mb-6 shrink-0">
-        <h2 className="text-xl font-black text-slate-900 uppercase italic">Draft Order</h2>
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar">
-          {roundsInDraft.map(r => (
-            <button 
-              key={r} 
-              type="button"
-              onClick={() => scrollToRound(r)} 
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all cursor-pointer min-w-[35px] bg-white text-slate-400 border border-transparent hover:border-blue-200 hover:text-blue-600 shadow-sm`}
-            >
-              R{r}
-            </button>
-          ))}
+      <div className="shrink-0 mb-6">
+        <div className="flex justify-between items-center mb-1">
+          <h2 className="text-xl font-black text-slate-900 uppercase italic">Draft Order</h2>
+          <div className="flex gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar">
+            {roundsInDraft.map(r => (
+              <button 
+                key={r} 
+                type="button"
+                onClick={() => scrollToRound(r)} 
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all cursor-pointer min-w-[35px] bg-white text-slate-400 border border-transparent hover:border-blue-200 hover:text-blue-600 shadow-sm`}
+              >
+                R{r}
+              </button>
+            ))}
+          </div>
         </div>
+        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+          Click Team to View Current Selections and Future Picks
+        </p>
       </div>
 
       {/* 3. CONTINUOUS SCROLLING LIST */}
