@@ -1,5 +1,6 @@
 "use client";
 import { DraftSlot } from '@/types/draft';
+import { ReactNode } from 'react';
 
 interface TeamColumnProps {
   teamName: string;
@@ -13,9 +14,23 @@ interface TeamColumnProps {
   isUserColumn?: boolean;
   teams?: string[];
   onTeamChange?: (val: string) => void;
+  children?: ReactNode;
 }
 
-export default function TeamColumn({ teamName, picks, selectedPicks, activeYear, onTogglePick, onAddCustom, getPickId, getValueLabel, isUserColumn, teams, onTeamChange }: TeamColumnProps) {
+export default function TeamColumn({ 
+  teamName, 
+  picks, 
+  selectedPicks, 
+  activeYear, 
+  onTogglePick, 
+  onAddCustom, 
+  getPickId, 
+  getValueLabel, 
+  isUserColumn, 
+  teams, 
+  onTeamChange,
+  children 
+}: TeamColumnProps) {
   return (
     <div className={`p-6 overflow-y-auto custom-scrollbar ${isUserColumn ? 'bg-white border-r border-slate-100' : 'bg-slate-50/30'}`}>
       <div className="mb-6 space-y-4">
@@ -66,6 +81,11 @@ export default function TeamColumn({ teamName, picks, selectedPicks, activeYear,
             <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest italic text-center px-10">Select a partner</p>
           </div>
         )}
+
+        {/* CRITICAL FIX: Move children outside the teamName check 
+            so the Trade Finder button is always visible on the CPU side.
+        */}
+        {!isUserColumn && children}
       </div>
     </div>
   );

@@ -59,16 +59,14 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
     .sort();
 
   const getPicksForTeam = (teamName: string, year: number) => {
-    // 1. FILTER: Grab real picks and BLOCK anything with a crazy slot number (> 1000)
     const existing = allPicks.filter(p => 
       p.current_team_name === teamName && 
       (p.year === year || (!p.year && year === 2026)) &&
-      p.slot_number < 1000 // KILLER FILTER: Blocks the #203640 style bugs
+      p.slot_number < 1000 
     );
 
     if (existing.length > 0 || year === 2026) return existing;
 
-    // 2. PLACEHOLDERS: Using a "Partial" cast to stop TypeScript errors
     return [1, 2, 3, 4, 5, 6, 7].map(round => ({
         id: `gen-${teamName}-${year}-${round}`,
         year: year,
@@ -77,7 +75,6 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
         current_team_name: teamName,
         team_name: teamName,
         team_abbr: "",
-        // Failsafe: Add any other missing fields your DraftSlot type needs
         team_id: 0,
         is_locked: false
     } as unknown as DraftSlot));
@@ -184,7 +181,20 @@ export default function TradeModal({ userTeam, allPicks, onClose, onConfirmTrade
             isUserColumn={false}
             teams={teams}
             onTeamChange={(val) => { setSelectedCpuTeam(val); setCpuSelectedPicks([]); }}
-          />
+          >
+            {/* Trade Finder Integrated Here */}
+            <TradeFinder 
+              userSelectedPicks={userSelectedPicks}
+              userValue={userValue}
+              allPicks={allPicks}
+              userTeam={userTeam}
+              getPickValue={getPickValue}
+              onSelectTrade={(team, picks) => {
+                setSelectedCpuTeam(team);
+                setCpuSelectedPicks(picks);
+              }}
+            />
+          </TeamColumn>
         </div>
 
         <FairnessMeter 
