@@ -140,8 +140,8 @@ export default function ResultsScreen({ draftedPlayers, draftOrder, maxRounds, o
         </header>
 
         <div className="flex-grow flex flex-col overflow-hidden border-y border-slate-100">
-          {/* UPDATED: Added grid-flow-col and grid-rows-8 to create column flow */}
-          <div className="flex-grow grid grid-flow-col grid-cols-4 grid-rows-8 h-full bg-white">
+          {/* UPDATED: Configured grid for 2 columns / 16 rows on mobile and 4 columns / 8 rows on desktop */}
+          <div className="flex-grow grid grid-flow-col grid-cols-2 grid-rows-16 md:grid-cols-4 md:grid-rows-8 h-full bg-white">
             {playersInView.slice(0, 32).map((pick) => (
               <div 
                 key={pick.id} 
